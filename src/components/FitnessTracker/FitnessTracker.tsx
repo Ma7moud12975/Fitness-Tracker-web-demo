@@ -1,9 +1,11 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import WebcamView from "./WebcamView";
 import ExerciseStats from "./ExerciseStats";
 import FormGuide from "./FormGuide";
 import WelcomeModal from "./WelcomeModal";
+import ExerciseDemoModal from "./ExerciseDemoModal";
 import VideoUpload from "./VideoUpload";
 import LoadingAnimation from "./LoadingAnimation";
 import { Button } from "@/components/ui/button";
