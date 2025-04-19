@@ -22,16 +22,23 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
 
   const exercise = EXERCISES[exerciseType];
   
-  // Map exercise types to appropriate image paths
+  // More reliable GIF sources - using direct links instead of Giphy embeds
   const exerciseImages = {
-    [ExerciseType.SQUAT]: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXp3czk4dWYzcDIzamVsMjRldWpxZzRjZmNkdW0xazd5NDRvc2wzYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2AbylVLJSvZiXzXakg/giphy.gif",
-    [ExerciseType.BICEP_CURL]: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnRteWNxb25rb3Nod2N4YzVmM2RmZ3V3cnBzdjZ5dmxyamE3MG9jNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26BGD4XaoPO3MLIMM/giphy.gif",
-    [ExerciseType.SHOULDER_PRESS]: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3lncHNoZ3M1ZDZsMjZpNm0waTM3cTJxaW1tZnAwZ2MzMHB3dHRqbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3ohs7YlhA8hn9oWrMQ/giphy.gif"
+    [ExerciseType.SQUAT]: "https://i.imgur.com/RM6PGn3.gif",
+    [ExerciseType.BICEP_CURL]: "https://i.imgur.com/0NbE7FW.gif",
+    [ExerciseType.SHOULDER_PRESS]: "https://i.imgur.com/lHh3wXA.gif"
   };
   
-  // Fallback to local path if external images don't work
+  // Static image fallbacks if GIFs don't load
+  const staticFallbacks = {
+    [ExerciseType.SQUAT]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/02/barbell-full-squat-movement.jpg",
+    [ExerciseType.BICEP_CURL]: "https://cdn.shopify.com/s/files/1/1876/4703/files/shutterstock_419477203_1024x1024.jpg",
+    [ExerciseType.SHOULDER_PRESS]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/03/dumbbell-overhead-press.jpg"
+  };
+  
+  // First try the GIF, then local path, then static fallback
   const imgSrc = imgError 
-    ? `/exercises/${exerciseType.toLowerCase()}.gif` 
+    ? staticFallbacks[exerciseType] 
     : exerciseImages[exerciseType];
 
   return (
@@ -43,11 +50,18 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
         <div className="space-y-4">
           <Card className="overflow-hidden">
             {imgError ? (
-              <div className="flex flex-col items-center justify-center p-8 bg-muted">
-                <AlertCircle className="w-12 h-12 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground text-center">
-                  Exercise demonstration image could not be loaded.
-                </p>
+              <div className="relative">
+                <img
+                  src={staticFallbacks[exerciseType]}
+                  alt={`${exercise.name} static demonstration`}
+                  className="w-full h-auto"
+                  onError={() => {
+                    console.error(`Failed to load static fallback for ${exerciseType}`);
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 text-white text-xs text-center">
+                  Static image shown - GIF could not be loaded
+                </div>
               </div>
             ) : (
               <img
