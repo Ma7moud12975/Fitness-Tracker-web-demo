@@ -26,7 +26,7 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
   const exerciseImages = {
     [ExerciseType.SQUAT]: "https://i.pinimg.com/originals/42/52/27/425227c898782116a5955666be277885.gif",
     [ExerciseType.BICEP_CURL]: "https://hips.hearstapps.com/hmg-prod/images/workouts/2016/03/dumbbellcurl-1457043876.gif",
-    [ExerciseType.SHOULDER_PRESS]: "https://media1.tenor.com/m/4jVNicvGHN8AAAAC/shoulder-press-the-rock.gif"
+    [ExerciseType.SHOULDER_PRESS]: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2RtcjdoNGxzaGE2dHJwM3hxaHplMnhwcGNjc2VoNHF0Z2VuZ25wNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7lugb7ObGYiXe/giphy.gif"
   };
   
   // Static image fallbacks as final resort
