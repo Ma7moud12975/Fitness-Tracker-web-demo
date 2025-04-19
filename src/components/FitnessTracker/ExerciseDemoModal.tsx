@@ -22,10 +22,10 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
 
   const exercise = EXERCISES[exerciseType];
   
-  // More reliable exercise GIF sources - direct CDN links
+  // Exercise GIF sources provided by the user
   const exerciseImages = {
-    [ExerciseType.SQUAT]: "https://media1.tenor.com/m/6tZGJUCeqKwAAAAC/squat.gif",
-    [ExerciseType.BICEP_CURL]: "https://media1.tenor.com/m/FWUMdOgv_QYAAAAC/bicep-curl.gif", 
+    [ExerciseType.SQUAT]: "https://i.pinimg.com/originals/42/52/27/425227c898782116a5955666be277885.gif",
+    [ExerciseType.BICEP_CURL]: "https://hips.hearstapps.com/hmg-prod/images/workouts/2016/03/dumbbellcurl-1457043876.gif",
     [ExerciseType.SHOULDER_PRESS]: "https://media1.tenor.com/m/4jVNicvGHN8AAAAC/shoulder-press-the-rock.gif"
   };
   
