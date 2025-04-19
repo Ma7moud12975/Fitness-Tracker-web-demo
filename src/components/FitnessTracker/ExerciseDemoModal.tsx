@@ -1,9 +1,9 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ExerciseType, EXERCISES } from "@/services/exerciseService";
 import { Card } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 interface ExerciseDemoModalProps {
   exerciseType: ExerciseType;
@@ -22,21 +22,21 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
 
   const exercise = EXERCISES[exerciseType];
   
-  // More reliable GIF sources - using direct links instead of Giphy embeds
+  // More reliable exercise GIF sources - direct CDN links
   const exerciseImages = {
-    [ExerciseType.SQUAT]: "https://i.imgur.com/RM6PGn3.gif",
-    [ExerciseType.BICEP_CURL]: "https://i.imgur.com/0NbE7FW.gif",
-    [ExerciseType.SHOULDER_PRESS]: "https://i.imgur.com/lHh3wXA.gif"
+    [ExerciseType.SQUAT]: "https://media1.tenor.com/m/6tZGJUCeqKwAAAAC/squat.gif",
+    [ExerciseType.BICEP_CURL]: "https://media1.tenor.com/m/FWUMdOgv_QYAAAAC/bicep-curl.gif", 
+    [ExerciseType.SHOULDER_PRESS]: "https://media1.tenor.com/m/4jVNicvGHN8AAAAC/shoulder-press-the-rock.gif"
   };
   
-  // Static image fallbacks if GIFs don't load
+  // Static image fallbacks as final resort
   const staticFallbacks = {
     [ExerciseType.SQUAT]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/02/barbell-full-squat-movement.jpg",
     [ExerciseType.BICEP_CURL]: "https://cdn.shopify.com/s/files/1/1876/4703/files/shutterstock_419477203_1024x1024.jpg",
     [ExerciseType.SHOULDER_PRESS]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/03/dumbbell-overhead-press.jpg"
   };
   
-  // First try the GIF, then local path, then static fallback
+  // First try the GIF, then fallback to static image
   const imgSrc = imgError 
     ? staticFallbacks[exerciseType] 
     : exerciseImages[exerciseType];
@@ -46,6 +46,9 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{exercise.name} - Demonstration</DialogTitle>
+          <DialogDescription>
+            Watch the demonstration and follow the key form points below
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <Card className="overflow-hidden">
@@ -59,7 +62,8 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
                     console.error(`Failed to load static fallback for ${exerciseType}`);
                   }}
                 />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 text-white text-xs text-center">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-2 text-white text-xs flex items-center justify-center">
+                  <Info className="w-3 h-3 mr-1" />
                   Static image shown - GIF could not be loaded
                 </div>
               </div>
