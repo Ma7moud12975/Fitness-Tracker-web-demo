@@ -6,6 +6,7 @@ import ExerciseStats from "./ExerciseStats";
 import FormGuide from "./FormGuide";
 import WelcomeModal from "./WelcomeModal";
 import ExerciseDemoModal from "./ExerciseDemoModal";
+import ExerciseDashboard from "./ExerciseDashboard";
 import VideoUpload from "./VideoUpload";
 import LoadingAnimation from "./LoadingAnimation";
 import { Button } from "@/components/ui/button";

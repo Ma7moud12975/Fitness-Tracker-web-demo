@@ -128,6 +128,8 @@ export interface ExerciseState {
   lastRepTimestamp: number;
   formCorrect: boolean; // Track if current form is correct
   formIssues: Record<string, boolean>; // Track specific form issues by body part or issue type
+  totalReps: number; // Total number of reps across all sets
+  correctFormCount: number; // Count of reps performed with correct form
 }
 
 // Initialize a new exercise state
@@ -140,7 +142,9 @@ export function initExerciseState(type: ExerciseType): ExerciseState {
     formFeedback: [],
     lastRepTimestamp: Date.now(),
     formCorrect: true,
-    formIssues: {}
+    formIssues: {},
+    totalReps: 0,
+    correctFormCount: 0
   };
 }
 
@@ -251,6 +255,10 @@ function processSquat(
       if (kneeAngle > settings.thresholds.upAngle) {
         state.repState = RepState.UP;
         state.repCount += 1;
+        state.totalReps += 1; // Increment total reps
+        if (state.formCorrect) {
+          state.correctFormCount += 1; // Increment correct form count
+        }
         state.lastRepTimestamp = Date.now();
         
         // Check if set is complete
@@ -360,6 +368,10 @@ function processBicepCurl(
       if (elbowAngle > settings.thresholds.downAngle) {
         state.repState = RepState.DOWN;
         state.repCount += 1;
+        state.totalReps += 1; // Increment total reps
+        if (state.formCorrect) {
+          state.correctFormCount += 1; // Increment correct form count
+        }
         state.lastRepTimestamp = Date.now();
         
         // Check if set is complete
@@ -471,6 +483,10 @@ function processShoulderPress(
       if (elbowAngle < settings.thresholds.downAngle && wristVerticalPosition > -50) {
         state.repState = RepState.DOWN;
         state.repCount += 1;
+        state.totalReps += 1; // Increment total reps
+        if (state.formCorrect) {
+          state.correctFormCount += 1; // Increment correct form count
+        }
         state.lastRepTimestamp = Date.now();
         
         // Check if set is complete
