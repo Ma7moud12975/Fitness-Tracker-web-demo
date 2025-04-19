@@ -44,3 +44,4 @@ All processing happens locally in your browser. No video data is stored or sent 
 
 This web application is inspired by the Python-based [Fitness Tracker Pro](https://github.com/a1harfoush/Fitness_Tracker_Pro) project, adapting its functionality for the web platform.
 
+![Untitled-3](https://github.com/user-attachments/assets/3c369613-96d2-48a4-b302-b330bd863fec)
