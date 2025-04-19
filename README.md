@@ -1,5 +1,5 @@
 
-# Fitness Tracker Pro - Web Edition
+# Fitness Tracker Demo - Web Edition
 ![Screenshot 2025-04-19 195350](https://github.com/user-attachments/assets/b8cdbc3c-87d7-4592-8297-97e123e24a1a)
 ![Screenshot 2025-04-19 195644](https://github.com/user-attachments/assets/54693655-5650-40c6-a407-aef15dac5609)
 
