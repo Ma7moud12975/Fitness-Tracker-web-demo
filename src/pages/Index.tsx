@@ -1,8 +1,8 @@
-
 import React from "react";
 import FitnessTracker from "@/components/FitnessTracker/FitnessTracker";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Dumbbell, Github } from "lucide-react";
+import Chatbot from "@/components/FitnessTracker/Chatbot";
 
 const Index = () => {
   return (
@@ -53,10 +53,10 @@ const Index = () => {
             </div>
             
             <div className="p-6 bg-card rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">Exercise Recognition</h3>
+              <h3 className="text-lg font-semibold mb-2">Rep Counter</h3>
               <p className="text-muted-foreground text-sm">
-                Automatically identifies the exercise being performed by analyzing body movements and positions
-                to provide relevant feedback.
+                Automatically counts your exercise repetitions in real-time using AI detection,
+                helping you track your sets and maintain consistent workout records.
               </p>
             </div>
             
@@ -79,6 +79,7 @@ const Index = () => {
           </p>
         </div>
       </footer>
+      <Chatbot />
     </div>
   );
 };

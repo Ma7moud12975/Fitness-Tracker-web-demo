@@ -1,0 +1,14 @@
+{
+  "chatbot": {
+    "greeting": "Hi! I'm your virtual fitness trainer. Which exercise would you like to perform today?",
+    "openChatTitle": "Open chat with trainer assistant",
+    "closeChatLabel": "Close Chatbot",
+    "headerTitle": "Trainer Assistant",
+    "inputPlaceholder": "Type your message...",
+    "sendLabel": "Send",
+    "loading": "...",
+    "errorMessage": "Sorry, there was a problem connecting to the trainer assistant.",
+    "apiErrorPrefix": "Error:",
+    "apiGenericError": "Sorry, I couldn't process that response."
+  }
+}

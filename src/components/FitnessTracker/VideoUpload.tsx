@@ -129,6 +129,9 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ onVideoLoad, className }) => 
       </div>
       
       <input
+        aria-label="Video file upload"
+        title="Choose a video file to upload"
+        placeholder="Choose video file"
         type="file"
         ref={inputRef}
         accept="video/*"

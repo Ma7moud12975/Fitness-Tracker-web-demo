@@ -11,17 +11,22 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Sonner closeButton />
+        {/* Add the background div with the new class */}
+        <div className="fixed inset-0 -z-10 main-background-image"></div> 
+        <div className="relative z-10 min-h-screen">
+          {/* Main content area - background is now transparent or uses card styles */}
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* Add other routes here */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

@@ -1,11 +1,12 @@
-
 import { Pose, calculateAngle, getKeypoint, calculateVerticalDistance, calculateHorizontalDistance } from './poseDetectionService';
 
 // Exercise types supported by the app
 export enum ExerciseType {
   SQUAT = 'squat',
   BICEP_CURL = 'bicepCurl',
-  SHOULDER_PRESS = 'shoulderPress',
+  // SHOULDER_PRESS = 'shoulderPress', // Removed
+  PUSH_UP = 'pushUp', // Added
+  PULL_UP = 'pullUp', // Added
   NONE = 'none'
 }
 
@@ -31,8 +32,13 @@ export interface ExerciseSettings {
     downAngle: number;
     // Additional thresholds for form correctness
     backAngleMin?: number;
-    backAngleMax?: number;
+    backAngleMax?: number; // Added
     kneePositionThreshold?: number;
+    upperArmMovementMax?: number; // Added for Bicep Curl
+    kneeValgusCheck?: boolean; // Added for Squat
+    chestForwardCheck?: boolean; // Added for Squat
+    bodyLineAngleRange?: [number, number]; // Added for Push Up
+    chinAboveWristRequired?: boolean; // Added for Pull Up
   };
   formInstructions: string[];
   musclesTargeted: string[];
@@ -44,20 +50,20 @@ export const EXERCISES: Record<ExerciseType, ExerciseSettings> = {
   [ExerciseType.SQUAT]: {
     name: 'Squat',
     type: ExerciseType.SQUAT,
-    targetReps: 10,
-    restBetweenSets: 60,
-    sets: 3,
+    targetReps: 15, // Example value
+    restBetweenSets: 10, // Example value
+    sets: 3, // Example value
     thresholds: {
-      upAngle: 170, // Hip angle when standing (knee near full extension)
-      downAngle: 90, // Hip angle at bottom of squat (thigh parallel to ground)
-      backAngleMin: 160, // Minimum angle for a straight back (avoid excessive forward lean)
-      kneePositionThreshold: 30, // Threshold for knee position relative to ankle
+      upAngle: 155, // Elbow angle when arms are extended
+      downAngle: 95, // Elbow angle when chest is near floor
+      bodyLineAngleRange: [150, 190], // Added - Max back angle deviation allowed
+      // Added - Check for excessive chest forward lean
     },
     formInstructions: [
-      'Keep your back straight throughout the movement',
-      'Knees should be aligned with toes, not collapsing inward',
-      'Go down until thighs are parallel to the ground',
-      'Maintain weight in your heels, not your toes'
+      'Keep your back straight, chest up',
+      'Lower until thighs are at least parallel to the ground (knee angle <= 100°)',
+      'Ensure knees track over toes, not caving inward',
+      'Maintain weight primarily in heels/midfoot'
     ],
     musclesTargeted: ['Quadriceps', 'Hamstrings', 'Glutes', 'Core'],
     primaryLandmarks: ['left_hip', 'left_knee', 'left_ankle', 'right_hip', 'right_knee', 'right_ankle', 'left_shoulder', 'right_shoulder']
@@ -65,42 +71,65 @@ export const EXERCISES: Record<ExerciseType, ExerciseSettings> = {
   [ExerciseType.BICEP_CURL]: {
     name: 'Bicep Curl',
     type: ExerciseType.BICEP_CURL,
-    targetReps: 12,
-    restBetweenSets: 45,
-    sets: 3,
+    targetReps: 12, // Default, can be adjusted
+    restBetweenSets: 10, // Default, can be adjusted
+    sets: 3, // Default, can be adjusted
     thresholds: {
-      upAngle: 45, // Elbow angle at top of curl (maximum flexion)
-      downAngle: 160, // Elbow angle at bottom of curl (near full extension)
-      backAngleMin: 165, // Keep back straight, no excessive leaning
+      upAngle: 55, // Changed (from 45) - Angle at top of curl (contracted)
+      downAngle: 160, // Changed (from 160) - Angle at bottom of curl (extended)
+      backAngleMax: 20, // Added - Max back angle deviation allowed
+      upperArmMovementMax: 200, // Added - Max upper arm movement allowed
     },
     formInstructions: [
-      'Keep elbows close to your sides throughout the movement',
-      'Minimize upper arm movement - isolate the bicep',
-      'Curl up until forearms are nearly vertical',
-      'Lower weights in a controlled motion to near full extension'
+      'Keep elbows tucked close to your sides',
+      'Minimize upper arm movement; isolate the bicep',
+      'Curl weight up towards shoulder (elbow angle ~55°)',
+      'Lower weight slowly until arms are nearly straight (elbow angle ~155°)'
     ],
     musclesTargeted: ['Biceps', 'Forearms'],
     primaryLandmarks: ['left_shoulder', 'left_elbow', 'left_wrist', 'right_shoulder', 'right_elbow', 'right_wrist']
   },
-  [ExerciseType.SHOULDER_PRESS]: {
-    name: 'Shoulder Press',
-    type: ExerciseType.SHOULDER_PRESS,
-    targetReps: 10,
-    restBetweenSets: 60,
-    sets: 3,
+  // [ExerciseType.SHOULDER_PRESS]: { ... } // Removed
+  [ExerciseType.PUSH_UP]: {
+    name: 'Push Up',
+    type: ExerciseType.PUSH_UP,
+    targetReps: 15, // Example value
+    restBetweenSets: 10, // Example value
+    sets: 3, // Example value
     thresholds: {
-      upAngle: 170, // Elbow angle at top of press (near full extension)
-      downAngle: 90, // Elbow angle at bottom of press (starting position)
-      backAngleMin: 165, // Avoid excessive back arching during the press
+      upAngle: 155, // Elbow angle when arms are extended
+      downAngle: 95, // Elbow angle when chest is near floor
+      bodyLineAngleRange: [150, 190], // Allowed angle range for shoulder-hip-knee to maintain straight body
     },
     formInstructions: [
-      'Keep your core engaged and back straight',
-      'Press directly upward in a vertical path',
-      'Lower weights under control to shoulder level',
-      'Avoid excessive back arching during the press'
+      'Place hands slightly wider than shoulder-width',
+      'Keep body in a straight line from head to heels',
+      'Lower chest towards the floor (elbow angle ~95°)',
+      'Push back up until arms are extended (elbow angle ~155°)',
     ],
-    musclesTargeted: ['Shoulders', 'Triceps', 'Upper back'],
-    primaryLandmarks: ['left_shoulder', 'left_elbow', 'left_wrist', 'right_shoulder', 'right_elbow', 'right_wrist', 'left_hip', 'right_hip']
+    musclesTargeted: ['Chest', 'Shoulders', 'Triceps', 'Core'],
+    primaryLandmarks: ['left_shoulder', 'left_elbow', 'left_wrist', 'right_shoulder', 'right_elbow', 'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee']
+  },
+  [ExerciseType.PULL_UP]: {
+    name: 'Pull Up',
+    type: ExerciseType.PULL_UP,
+    targetReps: 15, // Example value
+    restBetweenSets: 10, // Example value
+    sets: 3, // Example value
+    thresholds: {
+      upAngle: 100, // Elbow angle when arms are extended
+      downAngle: 95, // Elbow angle when chest is near floor
+      bodyLineAngleRange: [150, 190], // Require chin to clear bar height
+    },
+    formInstructions: [
+      'Grip bar slightly wider than shoulder-width, palms facing away',
+      'Hang with arms fully extended',
+      'Pull body up until chin is above the bar (elbow angle ~80°)',
+      'Lower body slowly until arms are fully extended (elbow angle ~160°)',
+      'Avoid excessive swinging or kipping',
+    ],
+    musclesTargeted: ['Back (Lats)', 'Biceps', 'Shoulders', 'Core'],
+    primaryLandmarks: ['left_shoulder', 'left_elbow', 'left_wrist', 'right_shoulder', 'right_elbow', 'right_wrist', 'nose'] // Nose/wrist relation for chin check
   },
   [ExerciseType.NONE]: {
     name: 'None',
@@ -137,7 +166,7 @@ export function initExerciseState(type: ExerciseType): ExerciseState {
   return {
     type,
     repCount: 0,
-    setCount: 1,
+    setCount: 0, // <-- Change this from 1 to 0
     repState: RepState.STARTING,
     formFeedback: [],
     lastRepTimestamp: Date.now(),
@@ -173,8 +202,14 @@ export function processExerciseState(
     case ExerciseType.BICEP_CURL:
       return processBicepCurl(newState, pose, exerciseSettings);
     
-    case ExerciseType.SHOULDER_PRESS:
-      return processShoulderPress(newState, pose, exerciseSettings);
+    // case ExerciseType.SHOULDER_PRESS: // Removed
+    //   return processShoulderPress(newState, pose, exerciseSettings);
+
+    case ExerciseType.PUSH_UP:
+      return processPushUp(newState, pose, exerciseSettings);
+
+    case ExerciseType.PULL_UP:
+      return processPullUp(newState, pose, exerciseSettings);
     
     default:
       return newState;
@@ -192,107 +227,142 @@ function processSquat(
   const leftKnee = getKeypoint(pose, 'left_knee');
   const leftAnkle = getKeypoint(pose, 'left_ankle');
   const leftShoulder = getKeypoint(pose, 'left_shoulder');
-  
-  if (!leftHip || !leftKnee || !leftAnkle || !leftShoulder) {
+  const rightHip = getKeypoint(pose, 'right_hip');
+  const rightKnee = getKeypoint(pose, 'right_knee');
+  const rightAnkle = getKeypoint(pose, 'right_ankle');
+  const rightShoulder = getKeypoint(pose, 'right_shoulder');
+
+  if (!leftHip || !leftKnee || !leftAnkle || !leftShoulder || !rightHip || !rightKnee || !rightAnkle || !rightShoulder) {
     state.formFeedback.push('Cannot detect legs and torso clearly');
     state.formCorrect = false;
     return state;
   }
-  
-  // Calculate key angles for squat form
-  const kneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
-  
-  // Check back alignment using shoulder-hip-knee angle
-  const backAngle = calculateAngle(leftShoulder, leftHip, leftKnee);
-  
+
+  // Calculate key angles for squat form (average of both sides)
+  const leftKneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+  const rightKneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+  const kneeAngle = (leftKneeAngle + rightKneeAngle) / 2;
+
+  // Calculate back angle relative to vertical (average of both sides)
+  const leftBackAngleVertical = calculateAngle(leftShoulder, leftHip, { x: leftHip.x, y: leftHip.y + 100 }); // Angle with vertical line down
+  const rightBackAngleVertical = calculateAngle(rightShoulder, rightHip, { x: rightHip.x, y: rightHip.y + 100 });
+  const backAngleDeviation = ( (180 - leftBackAngleVertical) + (180 - rightBackAngleVertical) ) / 2; // Deviation from straight up (0 degrees)
+
   // Log detailed analytics for debugging
-  // console.log(`Squat - Knee Angle: ${kneeAngle.toFixed(1)}°, Back Angle: ${backAngle.toFixed(1)}°`);
-  
-  // Check if back is straight enough
-  if (backAngle < (settings.thresholds.backAngleMin || 160)) {
-    state.formFeedback.push('Keep your back straighter, avoid excessive forward lean');
+  // console.log(`Squat - Avg Knee Angle: ${kneeAngle.toFixed(1)}°, Avg Back Deviation: ${backAngleDeviation.toFixed(1)}°`);
+
+  // Reset form correctness for this frame
+  state.formCorrect = true;
+  state.formFeedback = [];
+  state.formIssues = {}; // Clear previous issues
+
+  // Check if back is straight enough (deviation from vertical)
+  if (backAngleDeviation > (settings.thresholds.backAngleMax || 45)) {
+    state.formFeedback.push(`Keep your back straighter. Angle: ${backAngleDeviation.toFixed(0)}° (Max: ${settings.thresholds.backAngleMax || 45}°)`);
     state.formCorrect = false;
-    state.formIssues['left_shoulder'] = true;
-    state.formIssues['right_shoulder'] = true;
     state.formIssues['left_hip'] = true;
     state.formIssues['right_hip'] = true;
+    state.formIssues['left_shoulder'] = true;
+    state.formIssues['right_shoulder'] = true;
   }
-  
-  // Knee position check - should be aligned with ankle/foot
-  const kneeForwardPosition = leftKnee.x - leftAnkle.x;
-  if (Math.abs(kneeForwardPosition) > (settings.thresholds.kneePositionThreshold || 30)) {
-    state.formFeedback.push('Align your knees better with your ankles');
-    state.formCorrect = false;
-    state.formIssues['left_knee'] = true;
-    state.formIssues['right_knee'] = true;
+
+  // Knee Valgus Check (knees caving in/out)
+  if (settings.thresholds.kneeValgusCheck) {
+    const leftKneeValgus = leftKnee.x < leftAnkle.x - 0.05 * Math.abs(leftHip.y - leftAnkle.y); // Knee significantly inside ankle
+    const rightKneeValgus = rightKnee.x > rightAnkle.x + 0.05 * Math.abs(rightHip.y - rightAnkle.y); // Knee significantly outside ankle
+
+    if (leftKneeValgus) {
+      state.formFeedback.push('Left knee caving in. Push it outwards.');
+      state.formCorrect = false;
+      state.formIssues['left_knee'] = true;
+    }
+    if (rightKneeValgus) {
+      state.formFeedback.push('Right knee moving outwards too much.'); // Or adjust message based on desired form
+      state.formCorrect = false;
+      state.formIssues['right_knee'] = true;
+    }
   }
-  
+
+  // Chest Forward Lean Check (Shoulder X relative to Knee X in down phase)
+  if (settings.thresholds.chestForwardCheck && state.repState === RepState.DOWN) {
+      const leftChestLean = leftShoulder.x < leftKnee.x - 0.1 * Math.abs(leftShoulder.y - leftKnee.y); // Shoulder significantly behind knee
+      const rightChestLean = rightShoulder.x < rightKnee.x - 0.1 * Math.abs(rightShoulder.y - rightKnee.y);
+      if (leftChestLean || rightChestLean) {
+          state.formFeedback.push('Keep chest up, avoid excessive forward lean.');
+          state.formCorrect = false;
+          state.formIssues['left_shoulder'] = true;
+          state.formIssues['right_shoulder'] = true;
+      }
+  }
+
   // If form is incorrect and we're not in INCORRECT_FORM state, transition to it
-  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM && 
+  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM &&
       state.repState !== RepState.RESTING && state.repState !== RepState.STARTING) {
     state.repState = RepState.INCORRECT_FORM;
     state.formFeedback.push('Fix your form to continue counting reps');
     return state;
   }
-  
+
   // If form was incorrect but is now fixed, return to appropriate state
   if (state.formCorrect && state.repState === RepState.INCORRECT_FORM) {
     // Determine if we should go back to UP or DOWN state based on knee angle
     state.repState = kneeAngle < settings.thresholds.downAngle ? RepState.DOWN : RepState.UP;
     state.formFeedback.push('Good form, continue your exercise');
   }
-  
-  // State machine for rep counting
-  switch (state.repState) {
-    case RepState.STARTING:
-    case RepState.UP:
-      if (kneeAngle < settings.thresholds.downAngle) {
-        state.repState = RepState.DOWN;
-      }
-      break;
-    
-    case RepState.DOWN:
-      if (kneeAngle > settings.thresholds.upAngle) {
-        state.repState = RepState.UP;
-        state.repCount += 1;
-        state.totalReps += 1; // Increment total reps
-        if (state.formCorrect) {
-          state.correctFormCount += 1; // Increment correct form count
-        }
-        state.lastRepTimestamp = Date.now();
-        
-        // Check if set is complete
-        if (state.repCount >= settings.targetReps) {
-          state.setCount += 1;
-          state.repCount = 0;
-          state.repState = RepState.RESTING;
-          
-          if (state.setCount > settings.sets) {
-            state.setCount = settings.sets;
-            state.formFeedback.push('Workout complete! Great job!');
-          } else {
-            state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+
+  // State machine for rep counting (only proceed if not in INCORRECT_FORM)
+  if (state.repState !== RepState.INCORRECT_FORM) {
+      switch (state.repState) {
+        case RepState.STARTING:
+        case RepState.UP:
+          if (kneeAngle < settings.thresholds.downAngle) {
+            state.repState = RepState.DOWN;
           }
+          break;
+
+        case RepState.DOWN:
+          if (kneeAngle > settings.thresholds.upAngle) {
+            state.repState = RepState.UP;
+            state.repCount += 1;
+            state.totalReps += 1; // Increment total reps
+            if (state.formCorrect) {
+              state.correctFormCount += 1; // Increment correct form count
+            }
+            state.lastRepTimestamp = Date.now();
+
+            // Check if set is complete
+            if (state.repCount >= settings.targetReps) {
+              state.setCount += 1;
+              state.repCount = 0;
+              state.repState = RepState.RESTING;
+
+              if (state.setCount > settings.sets) {
+                state.setCount = settings.sets;
+                state.formFeedback.push('Workout complete! Great job!');
+              } else {
+                state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+              }
+            }
+          }
+          break;
+
+        case RepState.RESTING: {
+          // Check if rest period is over
+          const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
+          if (restTime >= settings.restBetweenSets) {
+            state.repState = RepState.STARTING;
+            state.formFeedback.push(`Starting set ${state.setCount}`);
+          } else {
+            state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
+          }
+          break;
         }
+
+        // case RepState.INCORRECT_FORM: // Handled above
+        //   break;
       }
-      break;
-    
-    case RepState.RESTING:
-      // Check if rest period is over
-      const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
-      if (restTime >= settings.restBetweenSets) {
-        state.repState = RepState.STARTING;
-        state.formFeedback.push(`Starting set ${state.setCount}`);
-      } else {
-        state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
-      }
-      break;
-      
-    case RepState.INCORRECT_FORM:
-      // Already handled above
-      break;
   }
-  
+
   return state;
 }
 
@@ -303,198 +373,375 @@ function processBicepCurl(
   settings: ExerciseSettings
 ): ExerciseState {
   // Focus on primary landmarks for bicep curls
+  const leftShoulder = getKeypoint(pose, 'left_shoulder');
+  const leftElbow = getKeypoint(pose, 'left_elbow');
+  const leftWrist = getKeypoint(pose, 'left_wrist');
+  const leftHip = getKeypoint(pose, 'left_hip');
   const rightShoulder = getKeypoint(pose, 'right_shoulder');
   const rightElbow = getKeypoint(pose, 'right_elbow');
   const rightWrist = getKeypoint(pose, 'right_wrist');
-  
-  if (!rightShoulder || !rightElbow || !rightWrist) {
-    state.formFeedback.push('Cannot detect arms clearly');
+  const rightHip = getKeypoint(pose, 'right_hip');
+
+  if (!leftShoulder || !leftElbow || !leftWrist || !leftHip || !rightShoulder || !rightElbow || !rightWrist || !rightHip) {
+    state.formFeedback.push('Cannot detect arms and torso clearly');
     state.formCorrect = false;
     return state;
   }
-  
-  // Calculate key angles and measurements
-  const elbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
-  
-  // Check if elbow is stable relative to shoulder (minimize upper arm movement)
-  const elbowHorizontalOffset = calculateHorizontalDistance(rightShoulder, rightElbow);
-  const upperArmVertical = Math.abs(rightElbow.y - rightShoulder.y) / 
-                          Math.sqrt(Math.pow(rightElbow.x - rightShoulder.x, 2) + Math.pow(rightElbow.y - rightShoulder.y, 2));
-  
+
+  // Calculate key angles and measurements (average)
+  const leftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
+  const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
+  const elbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
+
+  // Calculate back angle relative to vertical (average)
+  const leftBackAngleVertical = calculateAngle(leftShoulder, leftHip, { x: leftHip.x, y: leftHip.y + 100 });
+  const rightBackAngleVertical = calculateAngle(rightShoulder, rightHip, { x: rightHip.x, y: rightHip.y + 100 });
+  const backAngleDeviation = ( (180 - leftBackAngleVertical) + (180 - rightBackAngleVertical) ) / 2; // Deviation from straight up
+
+  // Calculate upper arm movement (deviation from vertical)
+  const leftUpperArmAngleVertical = calculateAngle(leftElbow, leftShoulder, { x: leftShoulder.x, y: leftShoulder.y + 100 });
+  const rightUpperArmAngleVertical = calculateAngle(rightElbow, rightShoulder, { x: rightShoulder.x, y: rightShoulder.y + 100 });
+  const upperArmDeviation = ( (180 - leftUpperArmAngleVertical) + (180 - rightUpperArmAngleVertical) ) / 2;
+
   // Log detailed analytics for debugging
-  // console.log(`Bicep Curl - Elbow Angle: ${elbowAngle.toFixed(1)}°, Upper Arm Vertical: ${upperArmVertical.toFixed(2)}`);
-  
-  // Check elbow position - should be close to body
-  if (elbowHorizontalOffset > 30) {
-    state.formFeedback.push('Keep your elbows closer to your body');
+  // console.log(`Bicep Curl - Avg Elbow Angle: ${elbowAngle.toFixed(1)}°, Avg Back Dev: ${backAngleDeviation.toFixed(1)}°, Avg Upper Arm Dev: ${upperArmDeviation.toFixed(1)}°`);
+
+  // Reset form correctness for this frame
+  state.formCorrect = true;
+  state.formFeedback = [];
+  state.formIssues = {}; // Clear previous issues
+
+  // Check back angle deviation
+  if (backAngleDeviation > (settings.thresholds.backAngleMax || 20)) {
+    state.formFeedback.push(`Keep your back straight. Angle: ${backAngleDeviation.toFixed(0)}° (Max: ${settings.thresholds.backAngleMax || 20}°)`);
     state.formCorrect = false;
-    state.formIssues['right_elbow'] = true;
-    state.formIssues['left_elbow'] = true;
+    state.formIssues['left_hip'] = true;
+    state.formIssues['right_hip'] = true;
   }
-  
-  // Check for excessive shoulder/upper arm movement
-  if (upperArmVertical < 0.85) { // Upper arm should be fairly vertical
-    state.formFeedback.push('Minimize shoulder movement, focus on elbow flexion');
+
+  // Check for excessive upper arm movement (deviation from vertical)
+  if (upperArmDeviation > (settings.thresholds.upperArmMovementMax || 25)) {
+    state.formFeedback.push(`Keep upper arms still. Movement: ${upperArmDeviation.toFixed(0)}° (Max: ${settings.thresholds.upperArmMovementMax || 25}°)`);
     state.formCorrect = false;
-    state.formIssues['right_shoulder'] = true;
     state.formIssues['left_shoulder'] = true;
+    state.formIssues['right_shoulder'] = true;
+    state.formIssues['left_elbow'] = true;
+    state.formIssues['right_elbow'] = true;
   }
-  
+
   // If form is incorrect and we're not in INCORRECT_FORM state, transition to it
-  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM && 
+  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM &&
       state.repState !== RepState.RESTING && state.repState !== RepState.STARTING) {
     state.repState = RepState.INCORRECT_FORM;
     state.formFeedback.push('Fix your form to continue counting reps');
     return state;
   }
-  
+
   // If form was incorrect but is now fixed, return to appropriate state
   if (state.formCorrect && state.repState === RepState.INCORRECT_FORM) {
     // Determine if we should go back to UP or DOWN state based on elbow angle
     state.repState = elbowAngle < settings.thresholds.upAngle ? RepState.UP : RepState.DOWN;
     state.formFeedback.push('Good form, continue your exercise');
   }
-  
-  // State machine for rep counting
-  switch (state.repState) {
-    case RepState.STARTING:
-    case RepState.DOWN:
-      if (elbowAngle < settings.thresholds.upAngle) {
-        state.repState = RepState.UP;
-      }
-      break;
-    
-    case RepState.UP:
-      if (elbowAngle > settings.thresholds.downAngle) {
-        state.repState = RepState.DOWN;
-        state.repCount += 1;
-        state.totalReps += 1; // Increment total reps
-        if (state.formCorrect) {
-          state.correctFormCount += 1; // Increment correct form count
-        }
-        state.lastRepTimestamp = Date.now();
-        
-        // Check if set is complete
-        if (state.repCount >= settings.targetReps) {
-          state.setCount += 1;
-          state.repCount = 0;
-          state.repState = RepState.RESTING;
-          
-          if (state.setCount > settings.sets) {
-            state.setCount = settings.sets;
-            state.formFeedback.push('Workout complete! Great job!');
-          } else {
-            state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+
+  // State machine for rep counting (only proceed if not in INCORRECT_FORM)
+  if (state.repState !== RepState.INCORRECT_FORM) {
+      switch (state.repState) {
+        case RepState.STARTING:
+        case RepState.DOWN:
+          if (elbowAngle < settings.thresholds.upAngle) {
+            state.repState = RepState.UP;
           }
+          break;
+
+        case RepState.UP:
+          if (elbowAngle > settings.thresholds.downAngle) {
+            state.repState = RepState.DOWN;
+            state.repCount += 1;
+            state.totalReps += 1; // Increment total reps
+            if (state.formCorrect) {
+              state.correctFormCount += 1; // Increment correct form count
+            }
+            state.lastRepTimestamp = Date.now();
+
+            // Check if set is complete
+            if (state.repCount >= settings.targetReps) {
+              state.setCount += 1;
+              state.repCount = 0;
+              state.repState = RepState.RESTING;
+
+              if (state.setCount > settings.sets) {
+                state.setCount = settings.sets;
+                state.formFeedback.push('Workout complete! Great job!');
+              } else {
+                state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+              }
+            }
+          }
+          break;
+
+        case RepState.RESTING: {
+          // Check if rest period is over
+          const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
+          if (restTime >= settings.restBetweenSets) {
+            state.repState = RepState.STARTING;
+            state.formFeedback.push(`Starting set ${state.setCount}`);
+          } else {
+            state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
+          }
+          break;
         }
+
+        // case RepState.INCORRECT_FORM: // Handled above
+        //   break;
       }
-      break;
-    
-    case RepState.RESTING:
-      // Check if rest period is over
-      const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
-      if (restTime >= settings.restBetweenSets) {
-        state.repState = RepState.STARTING;
-        state.formFeedback.push(`Starting set ${state.setCount}`);
-      } else {
-        state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
-      }
-      break;
-      
-    case RepState.INCORRECT_FORM:
-      // Already handled above
-      break;
   }
-  
+
   return state;
 }
 
-// Process shoulder press exercise
-function processShoulderPress(
+// Process push up exercise
+function processPushUp(
   state: ExerciseState,
   pose: Pose,
   settings: ExerciseSettings
 ): ExerciseState {
-  // Focus on primary landmarks for shoulder press
+  // Get landmarks for both sides
+  const leftShoulder = getKeypoint(pose, 'left_shoulder');
+  const leftElbow = getKeypoint(pose, 'left_elbow');
+  const leftWrist = getKeypoint(pose, 'left_wrist');
+  const leftHip = getKeypoint(pose, 'left_hip');
+  const leftKnee = getKeypoint(pose, 'left_knee');
   const rightShoulder = getKeypoint(pose, 'right_shoulder');
   const rightElbow = getKeypoint(pose, 'right_elbow');
   const rightWrist = getKeypoint(pose, 'right_wrist');
   const rightHip = getKeypoint(pose, 'right_hip');
-  
-  if (!rightShoulder || !rightElbow || !rightWrist || !rightHip) {
-    state.formFeedback.push('Cannot detect arms and torso clearly');
+  const rightKnee = getKeypoint(pose, 'right_knee');
+
+  // Check visibility
+  const leftVisible = leftShoulder && leftElbow && leftWrist && leftHip && leftKnee;
+  const rightVisible = rightShoulder && rightElbow && rightWrist && rightHip && rightKnee;
+
+  if (!leftVisible && !rightVisible) {
+    state.formFeedback.push('Cannot detect arms, torso, and legs clearly');
     state.formCorrect = false;
     return state;
   }
-  
-  // Calculate key angles and measurements
-  const elbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
-  const wristVerticalPosition = calculateVerticalDistance(rightWrist, rightShoulder);
-  
-  // Check back angle (should remain upright, not arch backward)
-  const backAngle = calculateAngle(rightShoulder, rightHip, { x: rightHip.x, y: rightHip.y - 100 }); // Vertical reference
-  const isBackArching = backAngle < (settings.thresholds.backAngleMin || 165);
-  
+
+  // Calculate key angles and measurements using available side(s)
+  let elbowAngle = 0;
+  let bodyLineAngle = 0;
+  let visibleSides = 0;
+
+  if (leftVisible) {
+    elbowAngle += calculateAngle(leftShoulder!, leftElbow!, leftWrist!);
+    bodyLineAngle += calculateAngle(leftShoulder!, leftHip!, leftKnee!); // Angle for body straightness
+    visibleSides++;
+  }
+  if (rightVisible) {
+    elbowAngle += calculateAngle(rightShoulder!, rightElbow!, rightWrist!); // Corrected to use right side landmarks
+    bodyLineAngle += calculateAngle(rightShoulder!, rightHip!, rightKnee!); // Corrected to use right side landmarks
+    visibleSides++;
+  }
+
+  // Average the values if both sides are visible
+  if (visibleSides > 0) {
+    elbowAngle /= visibleSides;
+    bodyLineAngle /= visibleSides;
+  }
+
   // Log detailed analytics for debugging
-  // console.log(`Shoulder Press - Elbow Angle: ${elbowAngle.toFixed(1)}°, Back Angle: ${backAngle.toFixed(1)}°, Wrist Vertical: ${wristVerticalPosition}`);
-  
-  // Check for back arching
-  if (isBackArching) {
-    state.formFeedback.push('Avoid arching your back, keep your core engaged');
+  // console.log(`Push Up - Avg Elbow Angle: ${elbowAngle.toFixed(1)}°, Avg Body Line Angle: ${bodyLineAngle.toFixed(1)}°`);
+
+  // Reset form correctness for this frame
+  state.formCorrect = true;
+  state.formFeedback = [];
+  state.formIssues = {}; // Clear previous issues
+
+  // Check body line straightness
+  const [minBodyAngle, maxBodyAngle] = settings.thresholds.bodyLineAngleRange || [150, 190];
+  if (bodyLineAngle < minBodyAngle || bodyLineAngle > maxBodyAngle) {
+    state.formFeedback.push(`Keep body straight. Angle: ${bodyLineAngle.toFixed(0)}° (Range: ${minBodyAngle}-${maxBodyAngle}°)`);
     state.formCorrect = false;
-    state.formIssues['right_hip'] = true;
-    state.formIssues['left_hip'] = true;
+    if (leftVisible) {
+      state.formIssues['left_hip'] = true;
+      state.formIssues['left_knee'] = true;
+    }
+    if (rightVisible) {
+      state.formIssues['right_hip'] = true;
+      state.formIssues['right_knee'] = true;
+    }
   }
-  
-  // Check for vertical path of the press
-  const wristHorizontalOffset = Math.abs(rightWrist.x - rightShoulder.x);
-  if (wristHorizontalOffset > 40 && wristVerticalPosition < -50) { // Check only when arms are raised
-    state.formFeedback.push('Press directly upward, maintain a vertical path');
-    state.formCorrect = false;
-    state.formIssues['right_wrist'] = true;
-    state.formIssues['left_wrist'] = true;
-  }
-  
+
   // If form is incorrect and we're not in INCORRECT_FORM state, transition to it
-  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM && 
+  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM &&
       state.repState !== RepState.RESTING && state.repState !== RepState.STARTING) {
     state.repState = RepState.INCORRECT_FORM;
     state.formFeedback.push('Fix your form to continue counting reps');
     return state;
   }
-  
+
   // If form was incorrect but is now fixed, return to appropriate state
   if (state.formCorrect && state.repState === RepState.INCORRECT_FORM) {
-    // Determine if we should go back to UP or DOWN state based on wrist position
-    state.repState = wristVerticalPosition < -100 ? RepState.UP : RepState.DOWN;
+    // Determine if we should go back to UP or DOWN state based on elbow angle
+    state.repState = elbowAngle < settings.thresholds.downAngle ? RepState.DOWN : RepState.UP;
     state.formFeedback.push('Good form, continue your exercise');
   }
-  
-  // State machine for rep counting
+
+  // State machine for rep counting (only proceed if not in INCORRECT_FORM)
+  if (state.repState !== RepState.INCORRECT_FORM) {
+      switch (state.repState) {
+        case RepState.STARTING:
+        case RepState.UP:
+          if (elbowAngle < settings.thresholds.downAngle) {
+            state.repState = RepState.DOWN;
+          }
+          break;
+
+        case RepState.DOWN:
+          if (elbowAngle > settings.thresholds.upAngle) {
+            state.repState = RepState.UP;
+            state.repCount += 1;
+            state.totalReps += 1; // Increment total reps
+            if (state.formCorrect) {
+              state.correctFormCount += 1; // Increment correct form count
+            }
+            state.lastRepTimestamp = Date.now();
+
+            // Check if set is complete
+            if (state.repCount >= settings.targetReps) {
+              state.setCount += 1;
+              state.repCount = 0;
+              state.repState = RepState.RESTING;
+
+              if (state.setCount > settings.sets) {
+                state.setCount = settings.sets;
+                state.formFeedback.push('Workout complete! Great job!');
+              } else {
+                state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+              }
+            }
+          }
+          break;
+
+        case RepState.RESTING: {
+          // Check if rest period is over
+          const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
+          if (restTime >= settings.restBetweenSets) {
+            state.repState = RepState.STARTING;
+            state.formFeedback.push(`Starting set ${state.setCount}`);
+          } else {
+            state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
+          }
+          break;
+        }
+
+        // case RepState.INCORRECT_FORM: // Handled above
+        //   break;
+      }
+  }
+
+  return state;
+}
+
+// Process pull up exercise
+function processPullUp(
+  state: ExerciseState,
+  pose: Pose,
+  settings: ExerciseSettings
+): ExerciseState {
+  // Get landmarks for both sides and nose
+  const leftShoulder = getKeypoint(pose, 'left_shoulder');
+  const leftElbow = getKeypoint(pose, 'left_elbow');
+  const leftWrist = getKeypoint(pose, 'left_wrist');
+  const rightShoulder = getKeypoint(pose, 'right_shoulder');
+  const rightElbow = getKeypoint(pose, 'right_elbow');
+  const rightWrist = getKeypoint(pose, 'right_wrist');
+  const nose = getKeypoint(pose, 'nose');
+
+  if (!leftShoulder || !leftElbow || !leftWrist || !rightShoulder || !rightElbow || !rightWrist || !nose) {
+    state.formFeedback.push('Cannot detect arms and head clearly');
+    state.formCorrect = false;
+    return state;
+  }
+
+  // Calculate average elbow angle
+  const leftElbowAngle = calculateAngle(leftShoulder, leftElbow, leftWrist);
+  const rightElbowAngle = calculateAngle(rightShoulder, rightElbow, rightWrist);
+  const elbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
+
+  // Calculate average wrist Y position
+  const avgWristY = (leftWrist.y + rightWrist.y) / 2;
+
+  // Form Checks
+  state.formCorrect = true;
+  state.formIssues = {};
+
+  // Check chin position relative to average wrist height in the 'DOWN' state (top of pull-up)
+  const chinAboveWrist = nose.y < avgWristY; // Lower Y value means higher on screen
+  if (settings.thresholds.chinAboveWristRequired && state.repState === RepState.DOWN && !chinAboveWrist) {
+      state.formFeedback.push('Pull higher - Chin needs to clear the bar (hands)');
+      state.formCorrect = false;
+      state.formIssues['nose'] = true;
+      state.formIssues['left_wrist'] = true;
+      state.formIssues['right_wrist'] = true;
+  }
+
+  // If form is incorrect, transition to INCORRECT_FORM state
+  if (!state.formCorrect && state.repState !== RepState.INCORRECT_FORM &&
+      state.repState !== RepState.RESTING && state.repState !== RepState.STARTING) {
+    state.repState = RepState.INCORRECT_FORM;
+    state.formFeedback.push('Fix your form to continue counting reps');
+    return state;
+  }
+
+  // If form was incorrect but is now fixed, return to appropriate state
+  if (state.formCorrect && state.repState === RepState.INCORRECT_FORM) {
+    // If chin is now above wrist (or check not required) and angle is appropriate for DOWN state
+    if ((chinAboveWrist || !settings.thresholds.chinAboveWristRequired) && elbowAngle < settings.thresholds.downAngle) {
+        state.repState = RepState.DOWN;
+    } else {
+        state.repState = RepState.UP; // Otherwise assume UP state (extended)
+    }
+    state.formFeedback.push('Good form, continue your exercise');
+  }
+
+  // State machine for rep counting (Count on DOWN_TO_UP transition)
+  // Note: UP state = arms extended (angle > upAngle threshold)
+  //       DOWN state = arms contracted (angle < downAngle threshold)
   switch (state.repState) {
     case RepState.STARTING:
-    case RepState.DOWN:
-      if (elbowAngle > settings.thresholds.upAngle && wristVerticalPosition < -100) {
-        state.repState = RepState.UP;
+    case RepState.UP: // Arms extended (bottom)
+      if (elbowAngle < settings.thresholds.downAngle) { // Start pulling up
+          // Check chin position upon entering DOWN state if required
+          if (settings.thresholds.chinAboveWristRequired && !(nose.y < avgWristY)) {
+              state.formFeedback.push('Pull higher - Chin needs to clear the bar (hands)');
+              state.formCorrect = false;
+              state.formIssues['nose'] = true;
+              state.formIssues['left_wrist'] = true;
+              state.formIssues['right_wrist'] = true;
+              state.repState = RepState.INCORRECT_FORM;
+          } else {
+              state.repState = RepState.DOWN;
+          }
       }
       break;
-    
-    case RepState.UP:
-      if (elbowAngle < settings.thresholds.downAngle && wristVerticalPosition > -50) {
-        state.repState = RepState.DOWN;
+
+    case RepState.DOWN: // Arms contracted (top)
+      if (elbowAngle > settings.thresholds.upAngle) { // Start lowering, complete rep
+        state.repState = RepState.UP;
         state.repCount += 1;
-        state.totalReps += 1; // Increment total reps
+        state.totalReps += 1;
         if (state.formCorrect) {
-          state.correctFormCount += 1; // Increment correct form count
+          state.correctFormCount += 1;
         }
         state.lastRepTimestamp = Date.now();
-        
+
         // Check if set is complete
         if (state.repCount >= settings.targetReps) {
           state.setCount += 1;
           state.repCount = 0;
           state.repState = RepState.RESTING;
-          
           if (state.setCount > settings.sets) {
             state.setCount = settings.sets;
             state.formFeedback.push('Workout complete! Great job!');
@@ -504,9 +751,8 @@ function processShoulderPress(
         }
       }
       break;
-    
-    case RepState.RESTING:
-      // Check if rest period is over
+
+    case RepState.RESTING: {
       const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
       if (restTime >= settings.restBetweenSets) {
         state.repState = RepState.STARTING;
@@ -515,11 +761,12 @@ function processShoulderPress(
         state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
       }
       break;
-      
+    }
+
     case RepState.INCORRECT_FORM:
       // Already handled above
       break;
   }
-  
+
   return state;
 }

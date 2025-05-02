@@ -1,39 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap'); /* Added Inter font */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Light theme variables (kept as is) */
     --background: 240 10% 98%;
     --foreground: 240 10% 10%;
-
     --card: 0 0% 100%;
     --card-foreground: 240 10% 10%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 10%;
-
     --primary: 265 89% 74%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 265 65% 55%;
     --secondary-foreground: 0 0% 100%;
-
     --muted: 240 5% 96%;
     --muted-foreground: 240 3.8% 46.1%;
-
     --accent: 225 80% 59%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 265 89% 74%;
-
     --radius: 0.5rem;
-
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -42,7 +35,6 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
     --success: 142 69% 58%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
@@ -50,42 +42,53 @@
   }
 
   .dark {
-    --background: 240 10% 10%;
-    --foreground: 240 10% 95%;
-
-    --card: 240 10% 15%;
-    --card-foreground: 240 10% 95%;
-
-    --popover: 240 10% 12%;
-    --popover-foreground: 240 10% 95%;
-
-    --primary: 265 89% 74%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 265 65% 55%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 225 80% 59%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 265 89% 74%;
+    /* Corrected dark theme variables (red/orange accents) */
+    /* Base */
+    --background: 0 0% 0%; /* Pure Black */
+    --foreground: 240 5% 85%; /* Lighter gray text #d4d4d6 */
     
+    /* Cards - Semi-transparent dark */
+    --card: 240 4% 10% / 0.7; /* hsla(240, 4%, 10%, 0.7) */
+    --card-foreground: 240 5% 85%;
+    
+    /* Popover - Slightly more opaque */
+    --popover: 240 4% 8% / 0.9;
+    --popover-foreground: 240 5% 85%;
+    
+    /* Primary - Deep Red/Orange */
+    --primary: 15 80% 55%; /* #d95f3b */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Muted version of primary */
+    --secondary: 15 60% 40%; /* #a64d30 */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted */
+    --muted: 240 3.7% 11%; 
+    --muted-foreground: 240 5% 55%; /* Darker muted text */
+    
+    /* Accent - Brighter version of primary */
+    --accent: 15 85% 65%; /* #e87a57 */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive - Standard red */
+    --destructive: 0 72% 51%; /* #e5484d */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border - Subtle dark border */
+    --border: 240 3.7% 15.9% / 0.5; /* hsla(240, 3.7%, 15.9%, 0.5) */
+    --input: 240 3.7% 15.9%;
+    --ring: 15 80% 55%; /* Match primary */
+
+    /* Sidebar variables (kept as is, adjust if needed) */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 224.3 76.3% 48%; /* Consider changing this to match primary */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 217.2 91.2% 59.8%; /* Consider changing this to match ring */
     
     --success: 142 69% 58%;
     --success-foreground: 0 0% 100%;
@@ -93,6 +96,8 @@
     --warning-foreground: 0 0% 100%;
   }
 }
+
+/* Removed the extra @layer base block that was here */
 
 @layer base {
   * {
@@ -101,5 +106,55 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif; /* Apply Inter font globally */
   }
 }
+
+/* FadeIn animation for messages */
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-enter {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Removed gradient-move animation */
+
+/* Pulse-glow animation (kept as is) */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px 1px rgba(217, 95, 59, 0.2), 0 0 8px 2px rgba(217, 95, 59, 0.15); } /* Adjusted to red/orange */
+  50% { box-shadow: 0 0 10px 3px rgba(217, 95, 59, 0.3), 0 0 16px 4px rgba(217, 95, 59, 0.25); } /* Adjusted to red/orange */
+}
+
+.hover\:animate-pulse-glow:hover {
+  animation: pulse-glow 1.5s infinite ease-in-out;
+}
+
+/* Removed energy-flow animation and related classes */
+
+/* Static background image class for the main app */
+.main-background-image {
+  background-image: 
+    linear-gradient(rgba(10, 5, 5, 0.75), rgba(10, 5, 5, 0.85)), /* Dark reddish overlay */
+    url('https://c1.wallpaperflare.com/preview/104/104/998/man-male-boy-a-person.jpg');
+  background-size: cover; 
+  background-position: center center; 
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* Keep the background fixed during scroll */
+}
+
+/* Static background image class */
+/* REMOVE the .bg-fitness-image class definition entirely */
+/* 
+.bg-fitness-image {
+  background-image: 
+    linear-gradient(rgba(10, 10, 15, 0.8), rgba(10, 10, 15, 0.9)),
+    url('...');
+  background-size: cover; 
+  background-position: center center; 
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+*/

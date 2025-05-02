@@ -1,5 +1,5 @@
 
-import React from "react";
+import React from 'react';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -12,13 +12,18 @@ interface ExerciseStatsProps {
 }
 
 const ExerciseStats: React.FC<ExerciseStatsProps> = ({ exerciseState, className }) => {
-  const settings = EXERCISES[exerciseState.type];
+const exerciseSettings = EXERCISES[exerciseState.type];
   const isResting = exerciseState.repState === RepState.RESTING;
-  const repProgress = settings.targetReps > 0 
-    ? (exerciseState.repCount / settings.targetReps) * 100 
+  const repProgress = exerciseSettings.targetReps > 0
+    ? (exerciseState.repCount / exerciseSettings.targetReps) * 100
     : 0;
-  const setProgress = settings.sets > 0 
-    ? ((exerciseState.setCount - 1) / settings.sets) * 100 
+  const setProgress = exerciseSettings.sets > 0
+    ? ((exerciseState.setCount - 1) / exerciseSettings.sets) * 100
+    : 0;
+  const settings = exerciseSettings;
+  const progress = settings.sets > 0 
+    // Calculate progress based on completed sets
+    ? (exerciseState.setCount / settings.sets) * 100 
     : 0;
 
   return (

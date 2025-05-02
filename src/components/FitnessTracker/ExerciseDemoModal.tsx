@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ExerciseType, EXERCISES } from "@/services/exerciseService";
@@ -23,17 +22,23 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
   const exercise = EXERCISES[exerciseType];
   
   // Exercise GIF sources provided by the user
-  const exerciseImages = {
+  const exerciseImages: Record<ExerciseType, string> = {
     [ExerciseType.SQUAT]: "https://i.pinimg.com/originals/42/52/27/425227c898782116a5955666be277885.gif",
-    [ExerciseType.BICEP_CURL]: "https://hips.hearstapps.com/hmg-prod/images/workouts/2016/03/dumbbellcurl-1457043876.gif",
-    [ExerciseType.SHOULDER_PRESS]: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2RtcjdoNGxzaGE2dHJwM3hxaHplMnhwcGNjc2VoNHF0Z2VuZ25wNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7lugb7ObGYiXe/giphy.gif"
+    [ExerciseType.BICEP_CURL]: "https://i.pinimg.com/originals/68/4d/50/684d50925eabbdf60f66d4bf7013c9ef.gif",
+    // [ExerciseType.SHOULDER_PRESS]: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2RtcjdoNGxzaGE2dHJwM3hxaHplMnhwcGNjc2VoNHF0Z2VuZ25wNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7lugb7ObGYiXe/giphy.gif", // Removed
+    [ExerciseType.PUSH_UP]: "https://i.pinimg.com/originals/fd/bb/09/fdbb092b58863e5c86fdb8bb1411fcea.gif",
+    [ExerciseType.PULL_UP]: "https://tunturi.org/Blogs/2022/09-pull-up.gif",
+    [ExerciseType.NONE]: "", // Keep NONE or handle appropriately
   };
   
   // Static image fallbacks as final resort
-  const staticFallbacks = {
+  const staticFallbacks: Record<ExerciseType, string> = {
     [ExerciseType.SQUAT]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/02/barbell-full-squat-movement.jpg",
     [ExerciseType.BICEP_CURL]: "https://cdn.shopify.com/s/files/1/1876/4703/files/shutterstock_419477203_1024x1024.jpg",
-    [ExerciseType.SHOULDER_PRESS]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/03/dumbbell-overhead-press.jpg"
+    // [ExerciseType.SHOULDER_PRESS]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/03/dumbbell-overhead-press.jpg", // Removed
+    [ExerciseType.PUSH_UP]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/02/push-up-movement.jpg",
+    [ExerciseType.PULL_UP]: "https://www.inspireusafoundation.org/wp-content/uploads/2022/02/pull-up-movement.jpg",
+    [ExerciseType.NONE]: "", // Keep NONE or handle appropriately
   };
   
   // First try the GIF, then fallback to static image
