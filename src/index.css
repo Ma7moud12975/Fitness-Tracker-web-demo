@@ -4,6 +4,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Add the heartBeat keyframes here */
+@layer utilities {
+  @keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+  }
+}
+
 @layer base {
   :root {
     /* Light theme variables (kept as is) */
@@ -44,8 +55,8 @@
   .dark {
     /* Corrected dark theme variables (red/orange accents) */
     /* Base */
-    --background: 0 0% 0%; /* Pure Black */
-    --foreground: 240 5% 85%; /* Lighter gray text #d4d4d6 */
+    --background: 240 4% 6%; /* Suggestion: Slightly off-black */
+    --foreground: 240 5% 85%; 
     
     /* Cards - Semi-transparent dark */
     --card: 240 4% 10% / 0.7; /* hsla(240, 4%, 10%, 0.7) */
@@ -56,8 +67,8 @@
     --popover-foreground: 240 5% 85%;
     
     /* Primary - Deep Red/Orange */
-    --primary: 15 80% 55%; /* #d95f3b */
-    --primary-foreground: 0 0% 100%;
+    --primary: 15 80% 55%; 
+    --primary-foreground: 0 0% 100%; 
     
     /* Secondary - Muted version of primary */
     --secondary: 15 60% 40%; /* #a64d30 */
@@ -78,17 +89,17 @@
     /* Border - Subtle dark border */
     --border: 240 3.7% 15.9% / 0.5; /* hsla(240, 3.7%, 15.9%, 0.5) */
     --input: 240 3.7% 15.9%;
-    --ring: 15 80% 55%; /* Match primary */
-
-    /* Sidebar variables (kept as is, adjust if needed) */
+    --ring: 15 80% 55%; 
+    
+    /* Sidebar variables (adjust if needed) */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%; /* Consider changing this to match primary */
+    --sidebar-primary: 15 80% 55%; /* Suggestion: Match primary */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%; /* Consider changing this to match ring */
+    --sidebar-ring: 15 80% 55%; /* Suggestion: Match primary/ring */
     
     --success: 142 69% 58%;
     --success-foreground: 0 0% 100%;
@@ -158,3 +169,11 @@
   background-attachment: fixed;
 }
 */
+
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  70% { transform: scale(1); }
+}

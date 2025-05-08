@@ -18,7 +18,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ExerciseType, ExerciseState, EXERCISES } from "@/services/exerciseService";
 
-interface ExerciseDashboardProps {
+type ExerciseDashboardProps = {
   exerciseStates: Record<ExerciseType, ExerciseState>;
 }
 

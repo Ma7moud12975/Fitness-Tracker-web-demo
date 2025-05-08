@@ -3,6 +3,7 @@ import FitnessTracker from "@/components/FitnessTracker/FitnessTracker";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Dumbbell, Github } from "lucide-react";
 import Chatbot from "@/components/FitnessTracker/Chatbot";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const Index = () => {
   return (
@@ -12,7 +13,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Dumbbell className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Fitness Tracker Pro</h1>
+            <h1 className="text-xl font-bold">Modarb</h1>
           </div>
           <div className="flex items-center gap-4">
             <a 
@@ -44,29 +45,41 @@ const Index = () => {
 
           {/* Additional Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <div className="p-6 bg-card rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">Pose Detection</h3>
-              <p className="text-muted-foreground text-sm">
-                The application uses TensorFlow.js pose detection to track key body landmarks during workouts,
-                providing accurate movement analysis.
-              </p>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Pose Detection</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  The application uses TensorFlow.js pose detection to track key body landmarks during workouts,
+                  providing accurate movement analysis.
+                </p>
+              </CardContent>
+            </Card>
             
-            <div className="p-6 bg-card rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">Rep Counter</h3>
-              <p className="text-muted-foreground text-sm">
-                Automatically counts your exercise repetitions in real-time using AI detection,
-                helping you track your sets and maintain consistent workout records.
-              </p>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Rep Counter</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Automatically counts your exercise repetitions in real-time using AI detection,
+                  helping you track your sets and maintain consistent workout records.
+                </p>
+              </CardContent>
+            </Card>
             
-            <div className="p-6 bg-card rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">Form Feedback</h3>
-              <p className="text-muted-foreground text-sm">
-                Get immediate feedback on your exercise form to help you perform exercises safely and effectively
-                while maximizing results.
-              </p>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Form Feedback</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Get immediate feedback on your exercise form to help you perform exercises safely and effectively
+                  while maximizing results.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
@@ -75,7 +88,12 @@ const Index = () => {
       <footer className="border-t bg-card py-6">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Fitness Tracker Pro - Web Edition | Based on <a href="https://github.com/a1harfoush/Fitness_Tracker_Pro" className="text-primary hover:underline">Fitness Tracker Pro</a>
+          Modarb - Web Edition | Based on <a 
+              href="https://github.com/a1harfoush/Fitness_Tracker_Pro" 
+              className="text-primary hover:underline hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm transition-opacity"
+            >
+              Modarb
+            </a>
           </p>
         </div>
       </footer>

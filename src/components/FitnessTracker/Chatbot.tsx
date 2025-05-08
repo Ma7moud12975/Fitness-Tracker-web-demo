@@ -1,8 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, ChangeEvent, FormEvent } from "react"; // Added useEffect, ChangeEvent, FormEvent
 import { X, MessageCircle, Send } from "lucide-react";
 
 const GEMINI_API_KEY = "AIzaSyCnlo4wBA7HJe-n7wp5anejyZCo-G1oHEQ"; // IMPORTANT: Consider moving this key to environment variables for security
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`; // Changed model to gemini-1.5-flash-latest
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_API_KEY}`; // Changed model to gemini-2.5-flash-preview-04-17-latest
 
 const initialPrompt = `You are a professional virtual fitness trainer assistant... 
 
@@ -54,6 +54,7 @@ E. Deadlift
   - Back Angle (During Lockout): When stage == "UP" or nearly up, average back angle relative to vertical must be less than 15°. Issue: "BACK". Feedback: "Lock Back (...)deg".
 
 Behavior Rules:
+- respond with the user language.
 - Always wait at least 0.5 seconds between counting repetitions (cooldown).
 - Only count a repetition if the form is correct during state transitions.
 - Encourage the user after every counted repetition.
@@ -71,14 +72,35 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for the textarea
 
-  const sendMessage = async () => {
+  // Function to auto-resize textarea
+  const autoResizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // Reset height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scroll height
+    }
+  };
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    autoResizeTextarea(); // Resize on input change
+  };
+
+  const sendMessage = async (e) => {
+    if (e) e.preventDefault(); // Prevent default form submission
     if (!input.trim()) return;
     const userMessage = { sender: "user", text: input };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput("");
     setLoading(true);
+
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+    }
 
     // Prepare contents in the expected format for Gemini
     const contents = [
@@ -122,9 +144,18 @@ export default function Chatbot() {
     setLoading(false);
   };
 
+  // Adjust height on initial load and when input changes externally (if needed)
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [input]);
+
   React.useEffect(() => {
     if (open && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+    // Auto-focus textarea when chat opens
+    if (open && textareaRef.current) {
+        textareaRef.current.focus();
     }
   }, [messages, open]);
 
@@ -198,20 +229,28 @@ export default function Chatbot() {
           </div>
           {/* Input Area - Adjusted style */}
           <form
-            className="flex items-center gap-2 border-t border-white/15 p-2 bg-black/50" // Adjusted input area style
-            onSubmit={e => { e.preventDefault(); sendMessage(); }}
+            className="flex items-start gap-2 border-t border-white/15 p-2 bg-black/50" // Use items-start for alignment with taller textarea
+            onSubmit={sendMessage} // Use the updated sendMessage
           >
-            <input
-              className="flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-red-600" // Adjusted input style, focus ring
+            <textarea
+              ref={textareaRef}
+              className="flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-red-600 resize-none overflow-hidden min-h-[40px] max-h-[120px]" // Added resize-none, overflow-hidden, min/max height
               placeholder="Type your message..."
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={handleInputChange} // Use the new handler
               disabled={loading}
-              autoFocus
+              rows={1} // Start with one row
+              onKeyDown={(e) => {
+                // Send message on Enter, allow Shift+Enter for newline
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
             />
             <button
               type="submit"
-              className="p-2 rounded-full bg-red-800 text-white hover:bg-red-700 disabled:opacity-50 disabled:bg-zinc-600" // Adjusted send button style
+              className="p-2 rounded-full bg-red-800 text-white hover:bg-red-700 disabled:opacity-50 disabled:bg-zinc-600 self-end mb-[1px]" // Align button to bottom
               disabled={loading || !input.trim()}
               aria-label="Send"
             >

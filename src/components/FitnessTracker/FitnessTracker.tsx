@@ -3,10 +3,9 @@ import { cn } from "@/lib/utils";
 import WebcamView from "./WebcamView";
 import ExerciseStats from "./ExerciseStats";
 import FormGuide from "./FormGuide";
-import WelcomeModal from "./WelcomeModal";
+// import WelcomeModal from "./WelcomeModal"; // Remove this line
 import ExerciseDemoModal from "./ExerciseDemoModal";
 import ExerciseDashboard from "./ExerciseDashboard";
-import VideoUpload from "./VideoUpload";
 import LoadingAnimation from "./LoadingAnimation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +42,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
   const [pose, setPose] = useState<Pose | null>(null);
   const [currentExercise, setCurrentExercise] = useState<ExerciseType>(ExerciseType.NONE);
   const [exerciseState, setExerciseState] = useState<ExerciseState>(initExerciseState(ExerciseType.NONE));
-  const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true);
+  // const [showWelcomeModal, setShowWelcomeModal] = useState<boolean>(true); // Remove this line
   const [inputMode, setInputMode] = useState<'webcam' | 'video'>('webcam');
   const [uploadedVideo, setUploadedVideo] = useState<HTMLVideoElement | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
@@ -261,7 +260,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
       const ctx = canvasRef.current.getContext('2d');
       ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
-  };
+    // Automatically start tracking after video upload
+    setIsTracking(true);
+}
 
   const handleExerciseSelect = (type: ExerciseType) => {
     setCurrentExercise(type);
@@ -340,7 +341,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
 
   return (
     <div className={cn("grid gap-6", className)}>
-      <WelcomeModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} />
+      {/* <WelcomeModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} /> */}{/* Remove this line */}
       <ExerciseDemoModal
         exerciseType={currentExercise}
         open={showExerciseDemo}
@@ -418,7 +419,32 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
                     />
                   </div>
                 ) : (
-                  <VideoUpload onVideoLoad={handleVideoLoad} />
+                  <div className="w-full aspect-video bg-muted rounded-md flex flex-col items-center justify-center text-muted-foreground">
+                    <FileVideo className="w-16 h-16 mb-4" />
+                    <p>No video selected</p>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const video = document.createElement('video');
+                          video.src = URL.createObjectURL(file);
+                          handleVideoLoad(video);
+                        }
+                      }}
+                      id="video-upload"
+                    />
+                    <label htmlFor="video-upload">
+                      <Button variant="outline" size="sm" className="mt-4" asChild>
+                        <span>
+                          <FileVideo className="w-4 h-4 mr-2" />
+                          Upload Video
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
                 )
               )}
               

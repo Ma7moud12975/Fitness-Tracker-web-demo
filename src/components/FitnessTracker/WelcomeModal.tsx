@@ -23,7 +23,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ open, onClose }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center justify-center text-center">
             <Dumbbell className="h-6 w-6 text-primary mr-2" />
-            Welcome to Fitness Tracker Pro
+            Welcome to Modarb
           </DialogTitle>
           <DialogDescription className="text-center pt-2">
             Your AI-powered workout assistant
@@ -32,7 +32,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ open, onClose }) => {
         
         <div className="space-y-4 py-2">
           <p className="text-sm">
-            Fitness Tracker Pro uses your webcam and AI to:
+          Modarb uses your webcam and AI to:
           </p>
           
           <ul className="space-y-2">
