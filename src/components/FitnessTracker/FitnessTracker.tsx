@@ -61,10 +61,10 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
       try {
         await initPoseDetector();
         setIsModelLoaded(true);
-        toast.success("AI model loaded successfully");
+        // toast.success("AI model loaded successfully"); // Remove or comment out this line
       } catch (error) {
         console.error("Error initializing pose detector:", error);
-        toast.error("Failed to load AI model");
+        // toast.error("Failed to load AI model"); // Remove or comment out this line
         // Add retry logic here if needed
       }
     };
@@ -268,7 +268,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     setCurrentExercise(type);
     setExerciseState(initExerciseState(type));
     setShowExerciseDemo(true);
-    toast.info(`Selected exercise: ${EXERCISES[type].name}`);
+    // toast.info(`Selected exercise: ${EXERCISES[type].name}`); // Remove or comment out this line
   };
 
   const resetVideo = () => {
