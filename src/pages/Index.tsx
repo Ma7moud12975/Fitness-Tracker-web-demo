@@ -1,7 +1,11 @@
 import React from "react";
 import FitnessTracker from "@/components/FitnessTracker/FitnessTracker";
 import { ModeToggle } from "@/components/ui/mode-toggle";
-import { Dumbbell, Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CardDescription, CardFooter } from "@/components/ui/card";
+import { Dumbbell } from "lucide-react"; // Removed Github from here
+import { Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import Chatbot from "@/components/FitnessTracker/Chatbot";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -16,14 +20,6 @@ const Index = () => {
             <h1 className="text-xl font-bold">Modarb</h1>
           </div>
           <div className="flex items-center gap-4">
-            <a 
-              href="https://github.com/a1harfoush/Fitness_Tracker_Pro" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Github className="h-5 w-5" />
-            </a>
             <ModeToggle />
           </div>
         </div>
