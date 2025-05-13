@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, ChangeEvent, FormEvent } from "react"; // Added useEffect, ChangeEvent, FormEvent
 import { X, MessageCircle, Send } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
-const GEMINI_API_KEY = "AIzaSyCnlo4wBA7HJe-n7wp5anejyZCo-G1oHEQ"; // IMPORTANT: Consider moving this key to environment variables for security
+const GEMINI_API_KEY = "AIzaSyDLVpZU80CE4XURZNcUBCbblO0d4uh0JQ4"; // IMPORTANT: Consider moving this key to environment variables for security
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_API_KEY}`; // Changed model to gemini-2.5-flash-preview-04-17-latest
 
 const initialPrompt = `You are a professional virtual fitness trainer assistant... 
@@ -92,8 +93,9 @@ Behavior Rules:
 - Offer corrective feedback if the user is not meeting form requirements.
 - Maintain a supportive, energetic tone at all times.
 - Occasionally, after counting a rep or providing feedback, include a brief (1 sentence) fitness tip or motivational quote relevant to the user's progress or the exercise.
-- Important Formatting Constraint: Do NOT use simple list markers like '-' or '*' in your responses. Instead, integrate lists naturally into sentences or use numbered lists if absolutely necessary and appropriate for clarity.
-
+- use .md
+- use emojis
+- use ema_angles
 Start by welcoming the user and asking which exercise they want to perform.`;
 
 export default function Chatbot() {
@@ -230,17 +232,17 @@ export default function Chatbot() {
               const totalReps = 10; // placeholder
               // Hypothetical: Assume you have currentRep and totalReps state
               const repProgress = msg.sender === 'bot' && msg.text.includes("rep") ? ` [${currentRep}/${totalReps}]` : '';
-              
               return (
                 <div key={i} className={`flex items-end gap-2 max-w-[90%] ${msg.sender === 'user' ? 'ml-auto' : ''} message-enter`}>
                   {msg.sender === 'bot' && <span className="text-xl">🤖</span>}
                   <div className={`text-sm rounded-lg px-3 py-2 shadow-md ${msg.sender === 'bot' 
-                    ? 'bg-zinc-800/70 text-white/90 rounded-bl-none' // Darker grey bot message
-                    : 'bg-red-900/60 text-white/90 rounded-br-none ml-auto'} // Muted red user message
-                  `}>
-                    {msg.text}
-                    {/* Display simple text progress */}
-                    {/* {repProgress && <span className="text-xs font-semibold text-red-300/80">{repProgress}</span>} */}
+                    ? 'bg-zinc-800/70 text-white/90 rounded-bl-none' 
+                    : 'bg-red-900/60 text-white/90 rounded-br-none ml-auto'}`}>
+                    {msg.sender === 'bot' ? (
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                   {msg.sender === 'user' && <span className="text-xl">👤</span>}
                 </div>
@@ -276,7 +278,7 @@ export default function Chatbot() {
                 // Send message on Enter, allow Shift+Enter for newline
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  sendMessage();
+                  sendMessage(e);
                 }
               }}
             />
