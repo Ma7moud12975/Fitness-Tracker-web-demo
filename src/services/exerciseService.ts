@@ -224,6 +224,12 @@ export function processExerciseState(
   }
 }
 
+// Helper function to play sound
+function playRepSound() {
+  const audio = new Audio('/pop.wav'); // Assuming pop.wav is in the public folder or accessible via root
+  audio.play().catch(error => console.warn('Error playing sound:', error));
+}
+
 // Process squat exercise
 function processSquat(
   state: ExerciseState,
@@ -333,6 +339,7 @@ function processSquat(
             state.repState = RepState.UP;
             state.repCount += 1;
             state.totalReps += 1; // Increment total reps
+            playRepSound(); // Play sound on rep count
             if (state.formCorrect) {
               state.correctFormCount += 1; // Increment correct form count
             }
@@ -479,6 +486,7 @@ function processBicepCurl(
             state.repState = RepState.DOWN;
             state.repCount += 1;
             state.totalReps += 1;
+            playRepSound(); // Play sound on rep count
             if (state.formCorrect) {
               state.correctFormCount += 1; // Increment correct form count
             }
@@ -570,6 +578,7 @@ function processPushUp(state: ExerciseState, pose: Pose, settings: ExerciseSetti
         // Rep counted on transition down→up
         state.repCount += 1;
         state.totalReps += 1;
+        playRepSound(); // Play sound on rep count
         if (state.formCorrect) {
           state.correctFormCount += 1;
         }
@@ -674,6 +683,7 @@ function processPullUp(
         state.repState = RepState.UP;
         state.repCount += 1;
         state.totalReps += 1;
+        playRepSound(); // Play sound on rep count
         if (state.formCorrect) {
           state.correctFormCount += 1;
         }
