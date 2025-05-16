@@ -1,2 +1,16 @@
-/* All previous content removed */
+/* App.css - Cleaned up */
+
+/* You can add any App-specific global styles here if needed. */
+/* For now, keeping it minimal as most styles are handled by Tailwind and index.css */
+
+/* Example of a global body style if you want to override Tailwind's default font smoothing */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@keyframes flash {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.75; }
+  100% { opacity: 0; }
+}/* All previous content removed */
 /* Remove this line -> غثس */

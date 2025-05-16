@@ -2,16 +2,17 @@
 import React, { useRef, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface WebcamViewProps {
-  className?: string;
-  onFrame?: (imageData: ImageData) => void;
-  width?: number;
-  height?: number;
-  drawCanvas?: boolean;
-  canvasRef?: React.RefObject<HTMLCanvasElement>;
-}
+/**
+ * @typedef {Object} WebcamViewProps
+ * @property {string} [className]
+ * @property {(imageData: ImageData) => void} [onFrame]
+ * @property {number} [width]
+ * @property {number} [height]
+ * @property {boolean} [drawCanvas]
+ * @property {React.RefObject<HTMLCanvasElement>} [canvasRef]
+ */
 
-const WebcamView: React.FC<WebcamViewProps> = ({
+const WebcamView = ({
   className,
   onFrame,
   width = 640,
@@ -60,8 +61,8 @@ const WebcamView: React.FC<WebcamViewProps> = ({
 
     return () => {
       // Clean up video stream on unmount
-      const stream = videoRef.current?.srcObject as MediaStream;
-      if (stream) {
+      const stream = videoRef.current && videoRef.current.srcObject;
+      if (stream && typeof stream.getTracks === "function") {
         stream.getTracks().forEach(track => track.stop());
       }
       
@@ -80,7 +81,7 @@ const WebcamView: React.FC<WebcamViewProps> = ({
     let lastFrameTime = 0;
     const frameDuration = 1000 / 30; // Target 30fps
     
-    const captureFrame = (timestamp: number) => {
+    const captureFrame = (timestamp) => {
       // Throttle frame capture to maintain consistent frame rate
       if (timestamp - lastFrameTime >= frameDuration) {
         lastFrameTime = timestamp;

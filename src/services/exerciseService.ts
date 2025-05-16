@@ -583,13 +583,35 @@ function processPushUp(state: ExerciseState, pose: Pose, settings: ExerciseSetti
           state.correctFormCount += 1;
         }
         state.lastRepTimestamp = Date.now();
+
+        // Check if set is complete
+        if (state.repCount >= settings.targetReps) {
+          state.setCount += 1;
+          state.repCount = 0;
+          state.repState = RepState.RESTING;
+
+          if (state.setCount > settings.sets) {
+            state.setCount = settings.sets;
+            state.formFeedback.push('Workout complete! Great job!');
+          } else {
+            state.formFeedback.push(`Set ${state.setCount - 1} complete! Rest for ${settings.restBetweenSets} seconds.`);
+          }
+        }
       }
       break;
-    case RepState.RESTING:
-      // ... existing rest logic ...
+    case RepState.RESTING: {
+      // Check if rest period is over
+      const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
+      if (restTime >= settings.restBetweenSets) {
+        state.repState = RepState.STARTING;
+        state.formFeedback.push(`Starting set ${state.setCount}`);
+      } else {
+        state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
+      }
       break;
+    }
     case RepState.INCORRECT_FORM:
-      // ... handle incorrect form ...
+      // Already handled above
       break;
   }
   return state;

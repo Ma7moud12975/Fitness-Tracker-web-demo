@@ -2,9 +2,13 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Bell, Mail, Settings, Search } from 'lucide-react'; // Assuming lucide-react is installed
+import { Bell, Mail, Settings, Search, BookUser } from 'lucide-react'; // Assuming lucide-react is installed
+import { ModeToggle } from '@/components/ui/mode-toggle';
+import { UserProfileDialog } from '@/components/UserProfileDialog';
 
 export function TopNav() {
+  const [profileOpen, setProfileOpen] = React.useState(false);
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur px-6">
       {/* Search Bar - Adjust styling as needed */}
@@ -31,6 +35,11 @@ export function TopNav() {
           <Settings className="h-5 w-5" />
           <span className="sr-only">Settings</span>
         </Button>
+        <ModeToggle />
+        <Button variant="outline" size="icon" className="ml-2" aria-label="Edit profile" onClick={() => setProfileOpen(true)}>
+          <BookUser className="h-[1.2rem] w-[1.2rem]" />
+        </Button>
+        <UserProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
         <Avatar className="h-9 w-9">
           {/* Replace with actual user image or fallback logic */}
           <AvatarImage src="/placeholder.svg" alt="@user" />

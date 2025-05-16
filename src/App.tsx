@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import UserProfile from "./pages/UserProfile";
+import { DeviceBanner } from "@/components/FitnessTracker/ExerciseDemoModal";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner closeButton />
+          <DeviceBanner />
           {/* Apply dynamic class and keep existing background as fallback */}
           <div 
             className={`fixed inset-0 -z-10 main-background-image ${timePeriodClass} transition-all duration-1000 ease-in-out`}
@@ -50,6 +53,7 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/user-profile" element={<UserProfile />} />
                 {/* Add other routes here */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

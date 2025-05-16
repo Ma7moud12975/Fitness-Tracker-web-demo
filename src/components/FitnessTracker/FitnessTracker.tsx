@@ -58,8 +58,8 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
 
   useEffect(() => {
     // Initialize countdown audio
-    countdownAudioRef.current = new Audio('/videoplayback.m4a'); // Assuming videoplayback.m4a is in the public folder
-    countdownAudioRef.current.load(); // Preload the audio
+    // Do not preload audio on mount to avoid autoplay restrictions; create it on user gesture
+    countdownAudioRef.current = null;
 
     const loadModel = async () => {
       try {
@@ -85,87 +85,6 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     };
   }, []);
 
-  const startVideoPlayback = useCallback(() => {
-    if (!uploadedVideo || !videoRef.current) return;
-    
-    if (videoRef.current.src !== uploadedVideo.src) {
-      videoRef.current.src = uploadedVideo.src;
-    }
-    
-    setVideoError(null);
-    
-    const playVideo = () => {
-      if (videoRef.current) {
-        videoRef.current.play().then(() => {
-          // Start processing frames ONLY after playback starts successfully
-          if (!animationRef.current) {
-             processVideoFrame(); 
-          }
-        }).catch(error => {
-          console.error("Error playing video:", error);
-          setVideoError("Failed to play video. Please try another file.");
-          setIsTracking(false);
-        });
-      }
-    };
-
-    // Wait for the video to be ready to play
-    if (videoRef.current.readyState >= videoRef.current.HAVE_FUTURE_DATA) {
-      playVideo();
-    } else {
-      videoRef.current.oncanplaythrough = playVideo; // Use oncanplaythrough for better readiness
-      videoRef.current.onerror = () => { // Add error handling for loading source
-         console.error("Error loading video source.");
-         setVideoError("Error loading video source. Please check the file.");
-         setIsTracking(false);
-      };
-    }
-  }, [uploadedVideo]); // Removed isTracking dependency, handled separately
-
-  const pauseVideoPlayback = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-    }
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-      animationRef.current = null;
-    }
-  };
-
-  // Effect to control video playback based on tracking state
-  useEffect(() => {
-    if (inputMode === 'video' && uploadedVideo) {
-      if (isTracking) {
-        startVideoPlayback();
-      } else {
-        pauseVideoPlayback();
-      }
-    }
-    // Cleanup function to pause video and cancel animation frame when component unmounts or mode changes
-    return () => {
-      pauseVideoPlayback();
-    };
-  }, [isTracking, uploadedVideo, inputMode, startVideoPlayback]);
-
-  // The main loop for processing video frames
-  const processVideoFrame = () => {
-    if (!isModelLoaded || !isTracking || !videoRef.current || videoRef.current.paused || videoRef.current.ended) {
-      // Stop the loop if tracking stops, video pauses/ends, or model isn't ready
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      return;
-    }
-    
-    // Process the current video frame
-    processFrame(videoRef.current); // Pass the video element directly
-    
-    // Request the next frame
-    animationRef.current = requestAnimationFrame(processVideoFrame);
-  };
-
-  // Unified frame processing for both webcam and video
   const processFrame = async (sourceElement) => {
     if (!isModelLoaded) {
       console.log('[DEBUG] Model not loaded, skipping frame.');
@@ -233,9 +152,83 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     } catch (error) {
       console.error('[DEBUG] Error processing frame:', error);
     }
-};
+  };
 
-  const handleVideoLoad = (video: HTMLVideoElement) => {
+  const processVideoFrame = useCallback(() => {
+    if (!isModelLoaded || !isTracking || !videoRef.current || videoRef.current.paused || videoRef.current.ended) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      return;
+    }
+
+    processFrame(videoRef.current);
+
+    animationRef.current = requestAnimationFrame(processVideoFrame);
+  }, [isModelLoaded, isTracking, processFrame]);
+
+  const startVideoPlayback = useCallback(() => {
+    if (!uploadedVideo || !videoRef.current) return;
+    
+    if (videoRef.current.src !== uploadedVideo.src) {
+      videoRef.current.src = uploadedVideo.src;
+    }
+    
+    setVideoError(null);
+    
+    const playVideo = () => {
+      if (videoRef.current) {
+        videoRef.current.play().then(() => {
+          // Start processing frames ONLY after playback starts successfully
+          if (!animationRef.current) {
+             processVideoFrame(); 
+          }
+        }).catch(error => {
+          console.error("Error playing video:", error);
+          setVideoError("Failed to play video. Please try another file.");
+          setIsTracking(false);
+        });
+      }
+    };
+
+    // Wait for the video to be ready to play
+    if (videoRef.current.readyState >= videoRef.current.HAVE_FUTURE_DATA) {
+      playVideo();
+    } else {
+      videoRef.current.oncanplaythrough = playVideo; // Use oncanplaythrough for better readiness
+      videoRef.current.onerror = () => { // Add error handling for loading source
+         console.error("Error loading video source.");
+         setVideoError("Error loading video source. Please check the file.");
+         setIsTracking(false);
+      };
+    }
+  }, [uploadedVideo, processVideoFrame]); // Removed isTracking dependency, handled separately
+
+  const pauseVideoPlayback = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (inputMode === 'video' && uploadedVideo) {
+      if (isTracking) {
+        startVideoPlayback();
+      } else {
+        pauseVideoPlayback();
+      }
+    }
+    return () => {
+      pauseVideoPlayback();
+    };
+  }, [isTracking, uploadedVideo, inputMode, startVideoPlayback]);
+
+  const handleVideoLoad = (video) => {
     setUploadedVideo(video);
     setVideoError(null);
     setIsTracking(false);
@@ -248,21 +241,9 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     }
     // Debug log for video load
     console.log('[DEBUG] Video loaded:', video.src, 'ReadyState:', video.readyState);
-    video.oncanplay = () => {
-      video.currentTime = 0;
-      video.play().then(() => {
-        console.log('[DEBUG] Video playback started. Setting isTracking to true.');
-        setIsTracking(true);
-      }).catch(err => {
-        console.error('[DEBUG] Video play error:', err);
-        setVideoError('Failed to play video.');
-      });
-    };
-    if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-      if (video.oncanplay) {
-        video.oncanplay(new Event('canplay'));
-      }
-    }
+    // Remove automatic playback on load. Playback will be initiated by handleToggleTracking after countdown.
+    video.currentTime = 0;
+    setIsFirstStart(true); // Reset for the next start click after video load
   };
 
   const handleExerciseSelect = (type: ExerciseType) => {
@@ -289,10 +270,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
         setCountdown(count);
         
         // Play the countdown sound only once at the beginning of the countdown
-        if (countdownAudioRef.current) {
-          countdownAudioRef.current.currentTime = 0;
-          countdownAudioRef.current.play().catch(error => console.error("Error playing countdown sound:", error));
+        if (!countdownAudioRef.current) {
+          countdownAudioRef.current = new Audio('/videoplayback.m4a');
         }
+        countdownAudioRef.current.currentTime = 0;
+        countdownAudioRef.current.play().catch(error => console.error("Error playing countdown sound:", error));
 
         const countdownInterval = setInterval(() => {
           count -= 1;
@@ -302,15 +284,14 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
             clearInterval(countdownInterval);
             setCountdown(null);
             if (inputMode === 'video' && uploadedVideo) {
-              startVideoPlayback();
+              startVideoPlayback(); // Start playback after countdown finishes
             }
             setIsTracking(true);
           }
         }, 1000);
-      } else {
-        if (inputMode === 'video' && uploadedVideo) {
-          startVideoPlayback();
-        }
+      } else { // Not the first start, no countdown
+        // For video mode, playback is only started after the countdown.
+        // If not the first start, we just toggle tracking state.
         setIsTracking(true);
       }
     } else {
@@ -372,7 +353,6 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
 
   return (
     <div className={cn("grid gap-6 px-2 sm:px-4", className)}>
-      {/* <WelcomeModal open={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} /> */}{/* Remove this line */}
       <ExerciseDemoModal
         exerciseType={currentExercise}
         open={showExerciseDemo}
@@ -395,7 +375,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
                   </>
                 )}
               </CardTitle>
-              <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'webcam' | 'video')} className="w-full sm:w-auto mt-2 sm:mt-0">
+              <Tabs value={inputMode} onValueChange={(v) => setInputMode(v === 'webcam' ? 'webcam' : 'video')} className="w-full sm:w-auto mt-2 sm:mt-0">
                 <TabsList>
                   <TabsTrigger value="webcam" className="flex items-center gap-2">
                     <Camera className="w-4 h-4" />
@@ -427,9 +407,6 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
                   <div className="w-full aspect-video bg-muted rounded-md flex flex-col items-center justify-center text-muted-foreground">
                     <CameraOff className="w-16 h-16 mb-4" />
                     <p>Camera is off</p>
-                    <Button variant="outline" size="sm" onClick={handleToggleCamera} className="mt-4">
-                      <Camera className="w-4 h-4 mr-2" /> Turn Camera On
-                    </Button>
                   </div>
                 )
               ) : (
@@ -508,6 +485,27 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
                     <>
                       <Play className="w-4 h-4 mr-2" />
                       Start Tracking
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="absolute bottom-4 left-4">
+                <Button
+                  onClick={handleToggleCamera}
+                  variant="outline"
+                  size="sm"
+                  disabled={!isCameraOn && inputMode !== 'webcam'}
+                >
+                  {isCameraOn ? (
+                    <>
+                      <CameraOff className="w-4 h-4 mr-2" />
+                      Turn Camera Off
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-4 h-4 mr-2" />
+                      Turn Camera On
                     </>
                   )}
                 </Button>

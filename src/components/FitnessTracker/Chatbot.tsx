@@ -5,11 +5,11 @@ import ReactMarkdown from 'react-markdown';
 const GEMINI_API_KEY = "AIzaSyDLVpZU80CE4XURZNcUBCbblO0d4uh0JQ4"; // IMPORTANT: Consider moving this key to environment variables for security
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${GEMINI_API_KEY}`; // Changed model to gemini-2.5-flash-preview-04-17-latest
 
-const initialPrompt = `You are a professional virtual fitness trainer assistant... 
+const initialPrompt = `You are a Physiotherapist and a professional virtual fitness trainer assistant... 
 
 Workout Exercises Setup:
 You are 'Fitness Tracker Pro AI Coach', a specialized and friendly AI assistant integrated into the 'Fitness Tracker Pro' application. Your primary role is to help users with their fitness journey by providing personalized advice, motivation, and clear explanations.
-
+You are 'Fitness Tracker Pro AI Coach', a Physiotherapist and a specialized and friendly AI assistant integrated into the 'Fitness Tracker Pro' application. Your primary role is to help users with their fitness journey by providing personalized advice, motivation, and clear explanations.
 You have access to the following user information:
 User Profile: Username, Age, Gender, Height (cm), Weight (kg).
 Workout Statistics (Overall & Per Exercise):
@@ -87,6 +87,15 @@ E. Deadlift
 
 Behavior Rules:
 - respond with the user language.
+- Use emojis to enhance engagement.
+- Use markdown formatting for clarity and emphasis.
+- Use the user's name if available.
+- Use the user's profile information to personalize responses.
+- Use the user's recent workout history to provide relevant feedback.
+- Use the user's current activity to provide real-time feedback.
+- Use the user's fitness goals to tailor advice and motivation.
+- Use the user's workout statistics to provide context and motivation.
+- Response in the field of health and physical therapy in general
 - Always wait at least 0.5 seconds between counting repetitions (cooldown).
 - Only count a repetition if the form is correct during state transitions.
 - Encourage the user after every counted repetition.
@@ -107,6 +116,27 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for the textarea
+
+  // --- User Profile Awareness ---
+  const [userProfile, setUserProfile] = useState(() => {
+    try {
+      const saved = localStorage.getItem("userProfile");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    function handleProfileUpdate(e) {
+      setUserProfile(e.detail);
+    }
+    window.addEventListener("userProfileUpdated", handleProfileUpdate);
+    // Also check on mount
+    const saved = localStorage.getItem("userProfile");
+    if (saved) setUserProfile(JSON.parse(saved));
+    return () => window.removeEventListener("userProfileUpdated", handleProfileUpdate);
+  }, []);
 
   // Function to auto-resize textarea
   const autoResizeTextarea = () => {
@@ -141,7 +171,7 @@ export default function Chatbot() {
       // Start with the initial system/context prompt
       {
         role: "user", // Often, system prompts are sent as the first user message
-        parts: [{ text: initialPrompt }]
+        parts: [{ text: initialPrompt + (userProfile ? `\n\nUser Profile:\nName: ${userProfile.name}\nAge: ${userProfile.age}\nGender: ${userProfile.gender}\nHeight: ${userProfile.height} cm\nWeight: ${userProfile.weight} kg` : "") }]
       },
       {
         role: "model", // Assume the bot's first message was a response to the prompt
