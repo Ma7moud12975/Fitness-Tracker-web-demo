@@ -599,17 +599,17 @@ function processPushUp(state: ExerciseState, pose: Pose, settings: ExerciseSetti
         }
       }
       break;
-    case RepState.RESTING: {
-      // Check if rest period is over
-      const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
-      if (restTime >= settings.restBetweenSets) {
-        state.repState = RepState.STARTING;
-        state.formFeedback.push(`Starting set ${state.setCount}`);
-      } else {
-        state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
-      }
-      break;
-    }
+case RepState.RESTING: {
+  // Check if rest period is over
+  const restTime = (Date.now() - state.lastRepTimestamp) / 1000;
+  if (restTime >= settings.restBetweenSets) {
+    state.repState = RepState.STARTING;
+    state.formFeedback.push(`Starting set ${state.setCount}`);
+  } else {
+    state.formFeedback.push(`Rest: ${Math.round(settings.restBetweenSets - restTime)}s remaining`);
+  }
+  break;
+}
     case RepState.INCORRECT_FORM:
       // Already handled above
       break;
