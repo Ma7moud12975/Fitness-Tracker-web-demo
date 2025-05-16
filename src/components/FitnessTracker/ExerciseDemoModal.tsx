@@ -4,15 +4,18 @@ import { ExerciseType, EXERCISES } from "@/services/exerciseService";
 import { Card } from "@/components/ui/card";
 import { AlertCircle, Info } from "lucide-react";
 import Player from "lottie-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Modern device recommendation banner (outside modal, on app entry)
 export function DeviceBanner() {
+  const isMobile = useIsMobile();
   const [show, setShow] = useState(false);
   useEffect(() => {
+    if (!isMobile) return; // Only show on mobile
     const timer = setTimeout(() => setShow(true), 2200); // Show after 2.2s
     return () => clearTimeout(timer);
-  }, []);
-  if (!show) return null;
+  }, [isMobile]);
+  if (!show || !isMobile) return null;
   return (
     <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-3 px-7 py-4 rounded-2xl shadow-2xl bg-card border border-border animate-fade-in backdrop-blur-md transition-all duration-700 dark:bg-card/80 dark:border-border/60">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-primary">
