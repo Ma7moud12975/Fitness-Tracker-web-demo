@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ExerciseType, EXERCISES } from "@/services/exerciseService";
+import { ExerciseType, ExerciseState, EXERCISES } from "@/services/exerciseService";
 import { AchievementBadges } from "./AchievementBadges";
 import { ChallengesWidget } from "./ChallengesWidget";
 
@@ -26,6 +26,7 @@ const CircularProgress = ({ value, colorClass, label, index }) => {
   const normalizedRadius = radius - stroke / 2;
   const circumference = 2 * Math.PI * normalizedRadius;
   const strokeDashoffset = circumference * (1 - value / 100);
+
 
   const gradientId = `progress-gradient-${index}`;
 
@@ -93,14 +94,19 @@ const CircularProgress = ({ value, colorClass, label, index }) => {
   );
 };
 
-function ExerciseDashboard({ exerciseStates }) {
+
+// type ExerciseDashboardProps = {
+//   exerciseStates: Record<ExerciseType, ExerciseState>;
+// }
+
+const ExerciseDashboard = ({ exerciseStates }) => {
   const exerciseData = Object.entries(exerciseStates)
     .filter(([type]) => type !== ExerciseType.NONE)
     .map(([type, state], index) => ({
-      name: EXERCISES[type].name,
+      name: EXERCISES[type as ExerciseType].name,
       reps: state.repCount,
       sets: state.setCount,
-      progress: Math.round((state.repCount / EXERCISES[type].targetReps) * 100),
+      progress: Math.round((state.repCount / EXERCISES[type as ExerciseType].targetReps) * 100),
       colorClass: index === 0 ? 'text-red-500' :
                  index === 1 ? 'text-blue-500' :
                  index === 2 ? 'text-green-500' :
