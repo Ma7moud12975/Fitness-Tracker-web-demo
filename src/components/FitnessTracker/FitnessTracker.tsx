@@ -56,11 +56,22 @@ const FitnessTracker = ({ className }) => {
     [ExerciseType.PUSH_UP]: EXERCISES[ExerciseType.PUSH_UP].sets,
     [ExerciseType.PULL_UP]: EXERCISES[ExerciseType.PULL_UP].sets,
   });
+  const [userRestTimes, setUserRestTimes] = useState({
+    [ExerciseType.NONE]: 0,
+    [ExerciseType.SQUAT]: EXERCISES[ExerciseType.SQUAT].restBetweenSets,
+    [ExerciseType.BICEP_CURL]: EXERCISES[ExerciseType.BICEP_CURL].restBetweenSets,
+    [ExerciseType.PUSH_UP]: EXERCISES[ExerciseType.PUSH_UP].restBetweenSets,
+    [ExerciseType.PULL_UP]: EXERCISES[ExerciseType.PULL_UP].restBetweenSets,
+  });
   const [countdown, setCountdown] = useState(null); // For 3-2-1 countdown
   const [isFirstStart, setIsFirstStart] = useState(true); // Track if it's the first time starting
 
   const handleSetsChange = (type, sets) => {
     setUserSets(prev => ({ ...prev, [type]: sets }));
+  };
+
+  const handleRestTimeChange = (type, restTime) => {
+    setUserRestTimes(prev => ({ ...prev, [type]: restTime }));
   };
 
   useEffect(() => {
@@ -153,9 +164,16 @@ const FitnessTracker = ({ className }) => {
         }
       }
       if (isTracking && detectedPose && currentExercise !== ExerciseType.NONE) {
-        const updatedState = processExerciseState(exerciseState, detectedPose);
+        // Pass user settings for sets and rest time
+        const updatedState = processExerciseState(
+          exerciseState,
+          detectedPose,
+          {
+            sets: userSets[currentExercise],
+            restBetweenSets: userRestTimes[currentExercise],
+          }
+        );
         if (JSON.stringify(updatedState) !== JSON.stringify(exerciseState)) {
-          console.log('[DEBUG] Exercise state updated:', updatedState);
           setExerciseState(updatedState);
           setExerciseStates(prev => ({ ...prev, [currentExercise]: updatedState }));
         }
@@ -171,7 +189,9 @@ const FitnessTracker = ({ className }) => {
     currentExercise,
     exerciseState,
     setExerciseState,
-    setExerciseStates
+    setExerciseStates,
+    userSets,
+    userRestTimes
   ]);
 
   const processVideoFrame = useCallback(() => {
@@ -576,6 +596,8 @@ const FitnessTracker = ({ className }) => {
                   exerciseState={exerciseState} 
                   sets={userSets[currentExercise]}
                   onSetsChange={sets => handleSetsChange(currentExercise, sets)}
+                  restTime={userRestTimes[currentExercise]}
+                  onRestTimeChange={restTime => handleRestTimeChange(currentExercise, restTime)}
                 />
               )}
               
