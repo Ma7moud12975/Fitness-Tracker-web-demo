@@ -1,29 +1,23 @@
-
 import React from 'react';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { ExerciseState, ExerciseType, EXERCISES, RepState } from "@/services/exerciseService";
 import { BadgeCheck, Dumbbell, AlertTriangle } from "lucide-react";
 
-interface ExerciseStatsProps {
-  exerciseState: ExerciseState;
-  className?: string;
-}
-
-const ExerciseStats: React.FC<ExerciseStatsProps> = ({ exerciseState, className }) => {
-const exerciseSettings = EXERCISES[exerciseState.type];
+function ExerciseStats({ exerciseState, className, sets, onSetsChange }) {
+  const exerciseSettings = EXERCISES[exerciseState.type];
   const isResting = exerciseState.repState === RepState.RESTING;
   const repProgress = exerciseSettings.targetReps > 0
     ? (exerciseState.repCount / exerciseSettings.targetReps) * 100
     : 0;
-  const setProgress = exerciseSettings.sets > 0
-    ? ((exerciseState.setCount - 1) / exerciseSettings.sets) * 100
+  const setProgress = sets > 0
+    ? ((exerciseState.setCount - 1) / sets) * 100
     : 0;
   const settings = exerciseSettings;
-  const progress = settings.sets > 0 
-    // Calculate progress based on completed sets
-    ? (exerciseState.setCount / settings.sets) * 100 
+  const progress = sets > 0 
+    ? (exerciseState.setCount / sets) * 100 
     : 0;
 
   return (
@@ -37,8 +31,17 @@ const exerciseSettings = EXERCISES[exerciseState.type];
               : "No Exercise Detected"}
           </div>
           {exerciseState.type !== ExerciseType.NONE && (
-            <div className="text-sm font-normal text-muted-foreground">
-              Set {exerciseState.setCount} of {settings.sets}
+            <div className="text-sm font-normal text-muted-foreground flex items-center gap-2">
+              Set {exerciseState.setCount} of
+              <Input
+                type="number"
+                min={1}
+                max={99}
+                value={sets}
+                onChange={e => onSetsChange(Number(e.target.value))}
+                className="w-16 h-7 px-2 py-1 text-sm ml-1"
+                style={{ width: 48 }}
+              />
             </div>
           )}
         </CardTitle>
@@ -65,7 +68,7 @@ const exerciseSettings = EXERCISES[exerciseState.type];
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">Sets Completed</span>
                   <span className="text-sm font-medium">
-                    {Math.max(0, exerciseState.setCount - 1)} / {settings.sets}
+                    {Math.max(0, exerciseState.setCount - 1)} / {sets}
                   </span>
                 </div>
                 <Progress value={setProgress} className="h-2" />
