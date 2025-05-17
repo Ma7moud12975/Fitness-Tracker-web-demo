@@ -19,6 +19,7 @@ import {
 import { ExerciseType, ExerciseState, EXERCISES } from "@/services/exerciseService";
 import { AchievementBadges } from "./AchievementBadges";
 import { ChallengesWidget } from "./ChallengesWidget";
+import { getFormQuality } from "@/utils/exerciseUtils";
 
 const CircularProgress = ({ value, colorClass, label, index }) => {
   const radius = 60;
@@ -71,7 +72,7 @@ const CircularProgress = ({ value, colorClass, label, index }) => {
 
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-2xl font-bold text-white drop-shadow">
-            {value}%
+            {value}
           </div>
         </div>
       </div>
@@ -94,25 +95,31 @@ const CircularProgress = ({ value, colorClass, label, index }) => {
   );
 };
 
-
-// type ExerciseDashboardProps = {
-//   exerciseStates: Record<ExerciseType, ExerciseState>;
-// }
+const getFormScorePercent = (state, sets) => {
+  // Only show score after all sets are completed
+  if (state.setCount < sets) return 0;
+  if (!state.totalReps) return 0;
+  return Math.round((state.correctFormCount / state.totalReps) * 100);
+};
 
 const ExerciseDashboard = ({ exerciseStates }) => {
+  // Get userSets from FitnessTracker if needed, otherwise use EXERCISES
   const exerciseData = Object.entries(exerciseStates)
     .filter(([type]) => type !== ExerciseType.NONE)
-    .map(([type, state], index) => ({
-      name: EXERCISES[type as ExerciseType].name,
-      reps: state.repCount,
-      sets: state.setCount,
-      progress: Math.round((state.repCount / EXERCISES[type as ExerciseType].targetReps) * 100),
-      colorClass: index === 0 ? 'text-red-500' :
-                 index === 1 ? 'text-blue-500' :
-                 index === 2 ? 'text-green-500' :
-                 'text-orange-500',
-      type
-    }));
+    .map(([type, state], index) => {
+      const sets = (window.__userSets && window.__userSets[type]) || EXERCISES[type].sets;
+      return {
+        name: EXERCISES[type].name,
+        reps: state.repCount,
+        sets: state.setCount,
+        formScore: getFormScorePercent(state, sets),
+        colorClass: index === 0 ? 'text-red-500' :
+                   index === 1 ? 'text-blue-500' :
+                   index === 2 ? 'text-green-500' :
+                   'text-orange-500',
+        type
+      };
+    });
 
   return (
     <div className="space-y-6">
@@ -126,7 +133,7 @@ const ExerciseDashboard = ({ exerciseStates }) => {
             {exerciseData.map((data, index) => (
               <CircularProgress
                 key={data.type}
-                value={data.progress}
+                value={data.formScore}
                 colorClass={data.colorClass}
                 label={data.name}
                 index={index}
@@ -179,7 +186,7 @@ const ExerciseDashboard = ({ exerciseStates }) => {
                     {data.sets}
                   </TableCell>
                   <TableCell className={cn("text-right font-medium", data.colorClass)}>
-                    {data.progress}%
+                    {data.formScore}%
                   </TableCell>
                 </TableRow>
               ))}
