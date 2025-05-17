@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
+import { Input } from "@/components/ui/input";
 import { 
   initPoseDetector, 
   detectPose, 
   drawPose,
-  Pose
 } from "@/services/poseDetectionService";
 import {
   ExerciseState,
@@ -26,35 +26,42 @@ import {
 } from "@/services/exerciseService";
 import { Dumbbell, Camera, FileVideo, AlertTriangle, Play, Pause, RefreshCw, CameraOff } from "lucide-react";
 
-interface FitnessTrackerProps {
-  className?: string;
-}
-
-const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null); // Ref for the video element
-  const animationRef = useRef<number | null>(null);
-  const countdownAudioRef = useRef<HTMLAudioElement | null>(null); // Ref for the countdown audio
+const FitnessTracker = ({ className }) => {
+  const canvasRef = useRef(null);
+  const videoRef = useRef(null); // Ref for the video element
+  const animationRef = useRef(null);
+  const countdownAudioRef = useRef(null); // Ref for the countdown audio
   
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false); // <-- Add camera state, default off
-  const [pose, setPose] = useState<Pose | null>(null);
-  const [currentExercise, setCurrentExercise] = useState<ExerciseType>(ExerciseType.NONE);
-  const [exerciseState, setExerciseState] = useState<ExerciseState>(initExerciseState(ExerciseType.NONE));
-  const [inputMode, setInputMode] = useState<'webcam' | 'video'>('webcam');
-  const [uploadedVideo, setUploadedVideo] = useState<HTMLVideoElement | null>(null);
-  const [videoError, setVideoError] = useState<string | null>(null);
+  const [pose, setPose] = useState(null);
+  const [currentExercise, setCurrentExercise] = useState(ExerciseType.NONE);
+  const [exerciseState, setExerciseState] = useState(initExerciseState(ExerciseType.NONE));
+  const [inputMode, setInputMode] = useState('webcam');
+  const [uploadedVideo, setUploadedVideo] = useState(null);
+  const [videoError, setVideoError] = useState(null);
   const [showExerciseDemo, setShowExerciseDemo] = useState(false);
-  const [exerciseStates, setExerciseStates] = useState<Record<ExerciseType, ExerciseState>>({
+  const [exerciseStates, setExerciseStates] = useState({
     [ExerciseType.NONE]: initExerciseState(ExerciseType.NONE),
     [ExerciseType.SQUAT]: initExerciseState(ExerciseType.SQUAT),
     [ExerciseType.BICEP_CURL]: initExerciseState(ExerciseType.BICEP_CURL),
     [ExerciseType.PUSH_UP]: initExerciseState(ExerciseType.PUSH_UP),
     [ExerciseType.PULL_UP]: initExerciseState(ExerciseType.PULL_UP),
   });
-  const [countdown, setCountdown] = useState<number | null>(null); // For 3-2-1 countdown
+  const [userSets, setUserSets] = useState({
+    [ExerciseType.NONE]: 0,
+    [ExerciseType.SQUAT]: EXERCISES[ExerciseType.SQUAT].sets,
+    [ExerciseType.BICEP_CURL]: EXERCISES[ExerciseType.BICEP_CURL].sets,
+    [ExerciseType.PUSH_UP]: EXERCISES[ExerciseType.PUSH_UP].sets,
+    [ExerciseType.PULL_UP]: EXERCISES[ExerciseType.PULL_UP].sets,
+  });
+  const [countdown, setCountdown] = useState(null); // For 3-2-1 countdown
   const [isFirstStart, setIsFirstStart] = useState(true); // Track if it's the first time starting
+
+  const handleSetsChange = (type, sets) => {
+    setUserSets(prev => ({ ...prev, [type]: sets }));
+  };
 
   useEffect(() => {
     // Initialize countdown audio
@@ -85,7 +92,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     };
   }, []);
 
-  const processFrame = async (sourceElement) => {
+  useEffect(() => {
+    window.__userSets = userSets;
+  }, [userSets]);
+
+  const processFrame = useCallback(async (sourceElement) => {
     if (!isModelLoaded) {
       console.log('[DEBUG] Model not loaded, skipping frame.');
       return;
@@ -128,7 +139,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
             if (sourceElement instanceof ImageData) {
               ctx.putImageData(sourceElement, 0, 0);
             } else {
-              ctx.drawImage(sourceElement as CanvasImageSource, 0, 0, canvasRef.current.width, canvasRef.current.height);
+              ctx.drawImage(sourceElement, 0, 0, canvasRef.current.width, canvasRef.current.height);
             }
           } catch (drawError) {
             console.error('[DEBUG] Error drawing source element to canvas:', drawError);
@@ -152,7 +163,16 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     } catch (error) {
       console.error('[DEBUG] Error processing frame:', error);
     }
-  };
+  }, [
+    isModelLoaded,
+    isTracking,
+    inputMode,
+    isCameraOn,
+    currentExercise,
+    exerciseState,
+    setExerciseState,
+    setExerciseStates
+  ]);
 
   const processVideoFrame = useCallback(() => {
     if (!isModelLoaded || !isTracking || !videoRef.current || videoRef.current.paused || videoRef.current.ended) {
@@ -246,7 +266,7 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
     setIsFirstStart(true); // Reset for the next start click after video load
   };
 
-  const handleExerciseSelect = (type: ExerciseType) => {
+  const handleExerciseSelect = (type) => {
     setCurrentExercise(type);
     setExerciseState(initExerciseState(type));
     setShowExerciseDemo(true);
@@ -552,7 +572,11 @@ const FitnessTracker: React.FC<FitnessTrackerProps> = ({ className }) => {
               </div>
               
               {currentExercise !== ExerciseType.NONE && (
-                <ExerciseStats exerciseState={exerciseState} />
+                <ExerciseStats 
+                  exerciseState={exerciseState} 
+                  sets={userSets[currentExercise]}
+                  onSetsChange={sets => handleSetsChange(currentExercise, sets)}
+                />
               )}
               
               {currentExercise === ExerciseType.NONE && (
