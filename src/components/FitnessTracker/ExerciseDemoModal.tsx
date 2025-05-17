@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect, useRef } from "react";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ExerciseType, EXERCISES } from "@/services/exerciseService";
 import { Card } from "@/components/ui/card";
@@ -50,6 +52,7 @@ const ExerciseDemoModal: React.FC<ExerciseDemoModalProps> = ({
   onClose,
 }) => {
   const [imgError, setImgError] = useState(false);
+  
   const voiceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Voice assistant: speak when modal opens
