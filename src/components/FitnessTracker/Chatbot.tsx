@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, ChangeEvent, FormEvent } from "react"; // Added useEffect, ChangeEvent, FormEvent
-import { X, MessageCircle, Send } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, MessageCircle, Send, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 
 const GEMINI_API_KEY = "AIzaSyDLVpZU80CE4XURZNcUBCbblO0d4uh0JQ4"; // IMPORTANT: Consider moving this key to environment variables for security
@@ -8,6 +8,7 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
 const initialPrompt = `You are a Physiotherapist and a professional virtual fitness trainer assistant... 
 
 Workout Exercises Setup:
+You are 'Fitness Tracker Pro AI Coach', a Physiotherapist and a specialized and friendly AI assistant integrated into the 'Fitness Tracker Pro' application. Your primary role is to help users with their fitness journey by providing personalized advice, motivation, and clear explanations.
 You are 'Fitness Tracker Pro AI Coach', a specialized and friendly AI assistant integrated into the 'Fitness Tracker Pro' application. Your primary role is to help users with their fitness journey by providing personalized advice, motivation, and clear explanations.
 You are 'Fitness Tracker Pro AI Coach', a Physiotherapist and a specialized and friendly AI assistant integrated into the 'Fitness Tracker Pro' application. Your primary role is to help users with their fitness journey by providing personalized advice, motivation, and clear explanations.
 You have access to the following user information:
@@ -114,8 +115,10 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref for the textarea
+  const [isRecording, setIsRecording] = useState(false);
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   // --- User Profile Awareness ---
   const [userProfile, setUserProfile] = useState(() => {
@@ -132,28 +135,58 @@ export default function Chatbot() {
       setUserProfile(e.detail);
     }
     window.addEventListener("userProfileUpdated", handleProfileUpdate);
-    // Also check on mount
     const saved = localStorage.getItem("userProfile");
     if (saved) setUserProfile(JSON.parse(saved));
     return () => window.removeEventListener("userProfileUpdated", handleProfileUpdate);
   }, []);
 
-  // Function to auto-resize textarea
-  const autoResizeTextarea = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'; // Reset height
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`; // Set to scroll height
+  // Voice recognition setup
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = false;
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.lang = userProfile && userProfile.language ? userProfile.language : 'en-US';
+    recognitionRef.current.onresult = function(event) {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      setIsRecording(false);
+      if (textareaRef.current) textareaRef.current.focus();
+    };
+    recognitionRef.current.onerror = function() {
+      setIsRecording(false);
+    };
+    recognitionRef.current.onend = function() {
+      setIsRecording(false);
+    };
+  }, [userProfile]);
+
+  const handleMicClick = function() {
+    if (!recognitionRef.current) return;
+    if (isRecording) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
+      recognitionRef.current.start();
     }
   };
 
-  // Handle input change
+  const autoResizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
   const handleInputChange = (e) => {
     setInput(e.target.value);
-    autoResizeTextarea(); // Resize on input change
+    autoResizeTextarea();
   };
 
   const sendMessage = async (e) => {
-    if (e) e.preventDefault(); // Prevent default form submission
+    if (e) e.preventDefault();
     if (!input.trim()) return;
     const userMessage = { sender: "user", text: input };
     const updatedMessages = [...messages, userMessage];
@@ -161,23 +194,19 @@ export default function Chatbot() {
     setInput("");
     setLoading(true);
 
-    // Reset textarea height after sending
     if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
     }
 
-    // Prepare contents in the expected format for Gemini
     const contents = [
-      // Start with the initial system/context prompt
       {
-        role: "user", // Often, system prompts are sent as the first user message
+        role: "user",
         parts: [{ text: initialPrompt + (userProfile ? `\n\nUser Profile:\nName: ${userProfile.name}\nAge: ${userProfile.age}\nGender: ${userProfile.gender}\nHeight: ${userProfile.height} cm\nWeight: ${userProfile.weight} kg` : "") }]
       },
       {
-        role: "model", // Assume the bot's first message was a response to the prompt
+        role: "model",
         parts: [{ text: " Hi! I'm your virtual fitness trainer. Which exercise would you like to perform today?" }]
       },
-      // Add the rest of the conversation history
       ...updatedMessages.slice(1).map((m) => ({
         role: m.sender === "user" ? "user" : "model",
         parts: [{ text: m.text }]
@@ -188,11 +217,10 @@ export default function Chatbot() {
       const res = await fetch(GEMINI_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents }) // Send the structured contents
+        body: JSON.stringify({ contents })
       });
       const data = await res.json();
       
-      // Check for potential errors in the response
       if (data.error) {
         console.error("Gemini API Error:", data.error);
         setMessages((prev) => [...prev, { sender: "bot", text: `Error: ${data.error.message}` }]);
@@ -208,7 +236,6 @@ export default function Chatbot() {
     setLoading(false);
   };
 
-  // Adjust height on initial load and when input changes externally (if needed)
   useEffect(() => {
     autoResizeTextarea();
   }, [input]);
@@ -217,7 +244,6 @@ export default function Chatbot() {
     if (open && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-    // Auto-focus textarea when chat opens
     if (open && textareaRef.current) {
         textareaRef.current.focus();
     }
@@ -225,7 +251,6 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Wrap the conditional rendering in curly braces */}
       {!open && (
         <button
           title="Open chat with trainer assistant"
@@ -237,16 +262,15 @@ export default function Chatbot() {
       )}
       {open && (
         <div 
-          className="fixed bottom-6 right-6 z-50 w-80 max-w-[90vw] bg-card border border-white/10 rounded-xl shadow-2xl flex flex-col transition-all duration-300 ease-out overflow-hidden" // Added border, overflow-hidden
+          className="fixed bottom-6 right-6 z-50 w-80 max-w-[90vw] bg-card border border-white/10 rounded-xl shadow-2xl flex flex-col transition-all duration-300 ease-out overflow-hidden"
           style={{
-            backgroundImage: `linear-gradient(rgba(10, 5, 5, 0.65), rgba(10, 5, 5, 0.65)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST25vZzhlUORJgddBzGPxEzMLuNBsnfYtJ8bAgxb-UvcI0TH99PPT_NhbvaMw0RZyIHRI&usqp=CAU')`, // Updated URL
+            backgroundImage: `linear-gradient(rgba(10, 5, 5, 0.65), rgba(10, 5, 5, 0.65)), url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST25vZzhlUORJgddBzGPxEzMLuNBsnfYtJ8bAgxb-UvcI0TH99PPT_NhbvaMw0RZyIHRI&usqp=CAU')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
           }}
         >
-          {/* Header - Slightly darker, matching overlay */}
-          <div className="flex items-center justify-between p-3 border-b border-white/15 bg-black/40 text-white rounded-t-xl"> {/* Adjusted header style */}
+          <div className="flex items-center justify-between p-3 border-b border-white/15 bg-black/40 text-white rounded-t-xl">
             <span className="font-bold flex items-center gap-2">
               <MessageCircle className="w-5 h-5" /> Trainer Assistant
             </span>
@@ -254,13 +278,10 @@ export default function Chatbot() {
               <X className="w-5 h-5" />
             </button>
           </div>
-          {/* Message Area - Adjusted bubble colors */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ maxHeight: 320 }}>
             {messages.map((msg, i) => {
-              // Example: Replace with your actual rep tracking state
-              const currentRep = 5; // placeholder
-              const totalReps = 10; // placeholder
-              // Hypothetical: Assume you have currentRep and totalReps state
+              const currentRep = 5;
+              const totalReps = 10;
               const repProgress = msg.sender === 'bot' && msg.text.includes("rep") ? ` [${currentRep}/${totalReps}]` : '';
               return (
                 <div key={i} className={`flex items-end gap-2 max-w-[90%] ${msg.sender === 'user' ? 'ml-auto' : ''} message-enter`}>
@@ -278,11 +299,10 @@ export default function Chatbot() {
                 </div>
               );
             })}
-            {/* Typing Indicator - Adjusted color */}
             {loading && (
               <div className="flex items-center gap-2">
                  <span className="text-xl">🤖</span>
-                 <div className="text-sm text-white/80 flex items-center space-x-1"> {/* Adjusted typing indicator color */}
+                 <div className="text-sm text-white/80 flex items-center space-x-1">
                     <span className="animate-pulse">.</span>
                     <span className="animate-pulse delay-150">.</span>
                     <span className="animate-pulse delay-300">.</span>
@@ -291,21 +311,29 @@ export default function Chatbot() {
             )}
             <div ref={messagesEndRef} />
           </div>
-          {/* Input Area - Adjusted style */}
           <form
-            className="flex items-start gap-2 border-t border-white/15 p-2 bg-black/50" // Use items-start for alignment with taller textarea
-            onSubmit={sendMessage} // Use the updated sendMessage
+            className="flex items-start gap-2 border-t border-white/15 p-2 bg-black/50"
+            onSubmit={sendMessage}
           >
+            <button
+              type="button"
+              onClick={handleMicClick}
+              className={`p-2 rounded-full ${isRecording ? 'bg-red-600' : 'bg-zinc-700'} text-white hover:bg-red-700 disabled:opacity-50 self-end mb-[1px]`}
+              aria-label={isRecording ? "Stop recording" : "Start voice input"}
+              style={{ outline: isRecording ? '2px solid #f87171' : undefined }}
+              tabIndex={0}
+            >
+              {isRecording ? <MicOff className="w-4 h-4 animate-pulse" /> : <Mic className="w-4 h-4" />}
+            </button>
             <textarea
               ref={textareaRef}
-              className="flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-red-600 resize-none overflow-hidden min-h-[40px] max-h-[120px]" // Added resize-none, overflow-hidden, min/max height
+              className="flex-1 rounded-lg border border-white/20 bg-black/30 px-3 py-2 text-sm text-white/90 placeholder-white/50 focus:outline-none focus:ring-1 focus:ring-red-600 resize-none overflow-hidden min-h-[40px] max-h-[120px]"
               placeholder="Type your message..."
               value={input}
-              onChange={handleInputChange} // Use the new handler
+              onChange={handleInputChange}
               disabled={loading}
-              rows={1} // Start with one row
+              rows={1}
               onKeyDown={(e) => {
-                // Send message on Enter, allow Shift+Enter for newline
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   sendMessage(e);
@@ -314,7 +342,7 @@ export default function Chatbot() {
             />
             <button
               type="submit"
-              className="p-2 rounded-full bg-red-800 text-white hover:bg-red-700 disabled:opacity-50 disabled:bg-zinc-600 self-end mb-[1px]" // Align button to bottom
+              className="p-2 rounded-full bg-red-800 text-white hover:bg-red-700 disabled:opacity-50 disabled:bg-zinc-600 self-end mb-[1px]"
               disabled={loading || !input.trim()}
               aria-label="Send"
             >
