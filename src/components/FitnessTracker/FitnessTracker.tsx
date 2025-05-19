@@ -16,6 +16,13 @@ import {
   detectPose, 
   drawPose,
 } from "@/services/poseDetectionService";
+
+// Extend the Window interface to include __userSets
+declare global {
+  interface Window {
+    __userSets?: Record<ExerciseType, number>;
+  }
+}
 import {
   ExerciseState,
   ExerciseType,
@@ -593,6 +600,7 @@ const FitnessTracker = ({ className }) => {
               
               {currentExercise !== ExerciseType.NONE && (
                 <ExerciseStats 
+                  className=""
                   exerciseState={exerciseState} 
                   sets={userSets[currentExercise]}
                   onSetsChange={sets => handleSetsChange(currentExercise, sets)}
