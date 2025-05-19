@@ -180,7 +180,8 @@ export function initExerciseState(type: ExerciseType): ExerciseState {
 // Process exercise state based on pose data
 export function processExerciseState(
   currentState: ExerciseState,
-  pose: Pose | null
+  pose: Pose | null,
+  userSettings?: Partial<ExerciseSettings>
 ): ExerciseState {
   // Add debug log at the very top
   console.log('processExerciseState called:', {
@@ -200,7 +201,11 @@ export function processExerciseState(
   newState.formCorrect = true; // Start with assumption that form is correct
   newState.formIssues = {}; // Reset form issues
   
-  const exerciseSettings = EXERCISES[currentState.type];
+  // Use userSettings to override EXERCISES defaults
+  const exerciseSettings = {
+    ...EXERCISES[currentState.type],
+    ...userSettings,
+  };
   
   // Exercise-specific logic
   switch (currentState.type) {
@@ -210,9 +215,6 @@ export function processExerciseState(
     case ExerciseType.BICEP_CURL:
       return processBicepCurl(newState, pose, exerciseSettings);
     
-    // case ExerciseType.SHOULDER_PRESS: // Removed
-    //   return processShoulderPress(newState, pose, exerciseSettings);
-
     case ExerciseType.PUSH_UP:
       return processPushUp(newState, pose, exerciseSettings);
 
